@@ -16,7 +16,7 @@ app = FastAPI()
 # CORS Middleware: Allows your frontend (on a different URL) to talk to this backend
 origins = [
     "http://localhost:5173", # Your local React dev server
-    # Add your deployed Netlify URL later
+    "https://fore-sky.netlify.app" # <-- ADD YOUR LIVE NETLIFY URL HERE
 ]
 
 app.add_middleware(
