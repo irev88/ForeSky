@@ -12,7 +12,8 @@ function RegisterPage() {
         e.preventDefault();
         setError('');
         try {
-            await apiClient.post('/users/', { email, password });
+            // CHANGE THE URL IN THIS LINE
+            await apiClient.post('/auth/register', { email, password });
             navigate('/login');
         } catch (err) {
             setError(err.response?.data?.detail || 'Registration failed');

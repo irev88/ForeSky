@@ -8,6 +8,12 @@ function LoginPage() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
+    // frontend/src/pages/LoginPage.jsx
+
+// ...
+    // frontend/src/pages/LoginPage.jsx
+
+// ...
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -16,7 +22,8 @@ function LoginPage() {
             formData.append('username', email);
             formData.append('password', password);
             
-            const response = await apiClient.post('/token', formData, {
+            // CHANGE THE URL IN THIS LINE
+            const response = await apiClient.post('/auth/login', formData, {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             });
             
@@ -27,6 +34,8 @@ function LoginPage() {
             setError(err.response?.data?.detail || 'Login failed');
         }
     };
+// ...
+// ...
 
     return (
         <div>
