@@ -6,10 +6,8 @@ from jose import JWTError, jwt
 from typing import List
 from datetime import timedelta
 
-import models
-import schemas
-import security
-from .database import SessionLocal, engine, Base
+import models, schemas, security
+from database import SessionLocal, engine, Base
 
 # This creates the tables in your Supabase DB
 Base.metadata.create_all(bind=engine)
@@ -18,8 +16,8 @@ app = FastAPI()
 
 # CORS Middleware: Allows your frontend (on a different URL) to talk to this backend
 origins = [
-    "http://localhost:5173", # Your local React dev server
-    "https://fore-sky.netlify.app" # <-- ADD YOUR LIVE NETLIFY URL HERE
+    "http://localhost:5173",                  # Local dev
+    "https://<YOUR_NETLIFY_SITE>.netlify.app"  # Actual production Netlify domain
 ]
 
 app.add_middleware(
