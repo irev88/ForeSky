@@ -17,7 +17,7 @@ app = FastAPI()
 # CORS Middleware: Allows your frontend (on a different URL) to talk to this backend
 origins = [
     "http://localhost:5173",                  # Local dev
-    "https://<YOUR_NETLIFY_SITE>.netlify.app"  # Actual production Netlify domain
+    "https://metsky.netlify.app"  # Actual production Netlify domain
 ]
 
 app.add_middleware(
