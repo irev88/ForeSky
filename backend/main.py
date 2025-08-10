@@ -105,3 +105,7 @@ def create_note_for_user(
 @app.get("/users/me/notes/", response_model=List[schemas.Note])
 def read_own_notes(db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)):
     return current_user.notes
+
+@app.get("/")
+def read_root():
+    return {"message": "ForeSky API is running. See docs at /docs"}
