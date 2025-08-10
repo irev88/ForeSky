@@ -1,10 +1,7 @@
 import axios from 'axios';
 
-// Decide API URL based on environment variables or fallback
-const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
 const apiClient = axios.create({
-    baseURL: apiBaseURL,
+    baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
 // Interceptor to add the auth token to every request
@@ -16,7 +13,9 @@ apiClient.interceptors.request.use(
         }
         return config;
     },
-    (error) => Promise.reject(error)
+    (error) => {
+        return Promise.reject(error);
+    }
 );
 
 export default apiClient;
