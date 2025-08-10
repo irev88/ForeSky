@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+// Decide API URL based on environment variables or fallback
+const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 const apiClient = axios.create({
-    // TEMPORARILY HARDCODE THE FULL URL
-    baseURL: 'https://foresky.onrender.com', 
+    baseURL: apiBaseURL,
 });
 
 // Interceptor to add the auth token to every request
@@ -14,9 +16,7 @@ apiClient.interceptors.request.use(
         }
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
 export default apiClient;

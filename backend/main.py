@@ -4,8 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 from typing import List
+from datetime import timedelta
 
-from . import models, schemas, security
+import models
+import schemas
+import security
 from .database import SessionLocal, engine, Base
 
 # This creates the tables in your Supabase DB
@@ -35,7 +38,7 @@ def get_db():
     finally:
         db.close()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login") # <--- UPDATE THIS LINE
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
@@ -80,7 +83,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = security.timedelta(minutes=security.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=security.ACCESS_TOKEN_EXPIRE_MINUTES)  
     access_token = security.create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
