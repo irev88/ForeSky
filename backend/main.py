@@ -1,23 +1,26 @@
+import os
+import smtplib
+from email.mime.text import MIMEText
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from jose import JWTError, jwt
 from typing import List
-from datetime import timedelta
 
-import models, schemas, security
-from database import SessionLocal, engine, Base
+from . import models, schemas, security
+from .database import SessionLocal, engine, Base
 
-# This creates the tables in your Supabase DB
+# Create DB tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(title="ForeSky API", description="FastAPI backend for ForeSky", version="1.0")
 
-# CORS Middleware: Allows your frontend (on a different URL) to talk to this backend
+# --------------------------
+# CORS
+# --------------------------
 origins = [
-    "http://localhost:5173",                  # Local dev
-    "https://metsky.netlify.app"  # Actual production Netlify domain
+    "http://localhost:5173",                 # Local dev
+    "https://metsky.netlify.app" # Prod frontend
 ]
 
 app.add_middleware(
@@ -28,7 +31,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Dependency to get a DB session
+
+# --------------------------
+# DB Session Dependency
+# --------------------------
 def get_db():
     db = SessionLocal()
     try:
@@ -36,7 +42,12 @@ def get_db():
     finally:
         db.close()
 
+
+# --------------------------
+# OAuth2 Scheme
+# --------------------------
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
 
 def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
@@ -45,33 +56,81 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, security.SECRET_KEY, algorithms=[security.ALGORITHM])
+        payload = security.jwt.decode(token, security.SECRET_KEY, algorithms=[security.ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
         token_data = schemas.TokenData(email=email)
-    except JWTError:
+    except security.JWTError:
         raise credentials_exception
+
     user = db.query(models.User).filter(models.User.email == token_data.email).first()
     if user is None:
         raise credentials_exception
     return user
 
-# --- API Endpoints ---
 
+# --------------------------
+# EMAIL SENDING UTILITY
+# --------------------------
+def send_verification_email(to_email: str, token: str):
+    verify_link = f"{os.getenv('FRONTEND_URL')}/verify?token={token}"
+    body = f"Hi,\n\nPlease verify your ForeSky account by clicking this link:\n{verify_link}\n\nThis link is valid for 24 hours."
+    msg = MIMEText(body)
+    msg['Subject'] = 'Verify your ForeSky account'
+    msg['From'] = os.getenv("EMAIL_FROM")
+    msg['To'] = to_email
+
+    with smtplib.SMTP(os.getenv("EMAIL_HOST"), int(os.getenv("EMAIL_PORT"))) as server:
+        server.starttls()
+        server.login(os.getenv("EMAIL_HOST_USER"), os.getenv("EMAIL_HOST_PASSWORD"))
+        server.send_message(msg)
+
+
+# --------------------------
+# ROOT ENDPOINT
+# --------------------------
+@app.get("/")
+def root():
+    return {"message": "ForeSky API is running. See /docs for API usage"}
+
+
+# --------------------------
+# AUTH ENDPOINTS
+# --------------------------
 @app.post("/auth/register", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
+
     hashed_password = security.get_password_hash(user.password)
-    db_user = models.User(email=user.email, hashed_password=hashed_password)
+    db_user = models.User(email=user.email, hashed_password=hashed_password, is_active=True, is_verified=False)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+
+    token = security.create_email_token(user.email)
+    send_verification_email(user.email, token)
+
     return db_user
 
-# CHANGE THIS ENDPOINT and the oauth2_scheme
+
+@app.get("/auth/verify")
+def verify_email(token: str, db: Session = Depends(get_db)):
+    email = security.verify_email_token(token)
+    if email is None:
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.is_verified = True
+    db.commit()
+    return {"message": "Email verified successfully. You can now log in."}
+
+
 @app.post("/auth/login", response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
@@ -81,20 +140,28 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=security.ACCESS_TOKEN_EXPIRE_MINUTES)  
+    if not user.is_verified:
+        raise HTTPException(status_code=403, detail="Email not verified. Please check your inbox.")
+
+    access_token_expires = security.timedelta(minutes=security.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = security.create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
+# --------------------------
+# USER'S NOTES ENDPOINTS
+# --------------------------
 @app.get("/users/me/", response_model=schemas.User)
 def read_users_me(current_user: schemas.User = Depends(get_current_user)):
     return current_user
 
 @app.post("/users/me/notes/", response_model=schemas.Note)
 def create_note_for_user(
-    note: schemas.NoteCreate, db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)
+    note: schemas.NoteCreate, 
+    db: Session = Depends(get_db), 
+    current_user: schemas.User = Depends(get_current_user)
 ):
     db_note = models.Note(**note.dict(), owner_id=current_user.id)
     db.add(db_note)
@@ -105,7 +172,3 @@ def create_note_for_user(
 @app.get("/users/me/notes/", response_model=List[schemas.Note])
 def read_own_notes(db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)):
     return current_user.notes
-
-@app.get("/")
-def read_root():
-    return {"message": "ForeSky API is running. See docs at /docs"}

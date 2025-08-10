@@ -1,6 +1,6 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-from database import Base
+from .database import Base
 
 class User(Base):
     __tablename__ = "users"
@@ -8,6 +8,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)  # NEW FIELD
     notes = relationship("Note", back_populates="owner")
 
 class Note(Base):
