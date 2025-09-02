@@ -15,3 +15,9 @@ print(f"--- Attempting to connect to: '{SQLALCHEMY_DATABASE_URL}' ---")
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+try:
+    with engine.connect() as conn:
+        print("✅ Successfully connected to DB")
+except Exception as e:
+    print("❌ Database connection failed:", e)
