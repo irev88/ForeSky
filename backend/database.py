@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
@@ -37,7 +37,7 @@ Base = declarative_base()
 # --- Test connection on startup ---
 try:
     with engine.connect() as conn:
-        conn.execute("SELECT 1")  # simple test query
+        conn.execute(text("SELECT 1"))  # simple test query
         print("✅ Successfully connected to DB")
 except Exception as e:
     print("❌ Database connection failed:", e)
