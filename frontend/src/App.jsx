@@ -3,6 +3,9 @@ import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import VerifyPage from "./pages/VerifyPage";
+
+// Inside <Routes>...</Routes>:
 
 function App() {
   const token = localStorage.getItem('accessToken');
@@ -27,6 +30,7 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={token ? <DashboardPage /> : <HomePage />} />
+        <Route path="/verify" element={<VerifyPage />} />
       </Routes>
     </div>
   );
