@@ -148,6 +148,18 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Email verified successfully. You can now log in."}
 
+@app.post("/auth/resend")
+def resend_verification(email: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.is_verified:
+        return {"message": "User already verified"}
+
+    # generate new token and resend email
+    token = security.create_email_token(user.email)
+    send_verification_email(user.email, token)
+    return {"message": "Verification email resent"}
 
 @app.post("/auth/login", response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
