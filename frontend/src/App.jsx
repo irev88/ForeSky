@@ -4,6 +4,7 @@ import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import VerifyPage from "./pages/VerifyPage";
+import './App.css';
 
 // Inside <Routes>...</Routes>:
 
