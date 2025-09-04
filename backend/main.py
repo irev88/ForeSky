@@ -1,7 +1,7 @@
 import os
 import smtplib
 from email.mime.text import MIMEText
-from fastapi import Depends, FastAPI, HTTPException, status, Body
+from fastapi import Depends, FastAPI, HTTPException, status, Body, Path
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -194,6 +194,44 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+@app.put("/users/me/notes/{note_id}", response_model=schemas.Note)
+def update_note(
+    note_id: int = Path(...),
+    note: schemas.NoteCreate = Body(...),
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(get_current_user)
+):
+    db_note = db.query(models.Note).filter(
+        models.Note.id == note_id,
+        models.Note.owner_id == current_user.id
+    ).first()
+
+    if not db_note:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    db_note.title = note.title
+    db_note.content = note.content
+    db.commit()
+    db.refresh(db_note)
+    return db_note
+
+@app.delete("/users/me/notes/{note_id}")
+def delete_note(
+    note_id: int = Path(...),
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(get_current_user)
+):
+    db_note = db.query(models.Note).filter(
+        models.Note.id == note_id,
+        models.Note.owner_id == current_user.id
+    ).first()
+
+    if not db_note:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    db.delete(db_note)
+    db.commit()
+    return {"message": "Note deleted successfully"}
 
 # --------------------------
 # USER'S NOTES ENDPOINTS

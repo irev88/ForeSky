@@ -1,58 +1,167 @@
-import React, { useState, useEffect } from 'react';
-import apiClient from '../api';
+import React, { useState, useEffect } from "react";
+import apiClient from "../api";
+import "./Dashboard.css";
 
 function DashboardPage() {
-    const [notes, setNotes] = useState([]);
-    const [title, setTitle] = useState('');
-    const [content, setContent] = useState('');
-    const [error, setError] = useState('');
+  const [notes, setNotes] = useState([]);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [editingNote, setEditingNote] = useState(null);
 
-    const fetchNotes = async () => {
-        try {
-            const response = await apiClient.get('/users/me/notes/');
-            setNotes(response.data);
-        } catch (err) {
-            setError('Could not fetch notes.');
-        }
-    };
+  // Search & sort
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
 
-    useEffect(() => {
-        fetchNotes();
-    }, []);
+  const fetchNotes = async () => {
+    try {
+      const response = await apiClient.get("/users/me/notes/");
+      setNotes(response.data);
+    } catch {
+      setError("Could not fetch notes.");
+    }
+  };
 
-    const handleAddNote = async (e) => {
-        e.preventDefault();
-        try {
-            await apiClient.post('/users/me/notes/', { title, content });
-            setTitle('');
-            setContent('');
-            fetchNotes(); // Refresh notes list
-        } catch (err) {
-            setError('Could not add note.');
-        }
-    };
+  useEffect(() => {
+    fetchNotes();
+  }, []);
 
-    return (
-        <div>
-            <h2>My Dashboard</h2>
-            <h3>Add a New Note</h3>
-            <form onSubmit={handleAddNote}>
-                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" required />
-                <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Content"></textarea>
-                <button type="submit">Add Note</button>
-            </form>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+  const handleAddNote = async (e) => {
+    e.preventDefault();
+    setError(""); setSuccess("");
+    try {
+      await apiClient.post("/users/me/notes/", { title, content });
+      setTitle(""); setContent("");
+      setSuccess("Note added ✨");
+      fetchNotes();
+    } catch {
+      setError("Could not add note.");
+    }
+  };
 
-            <h3>My Notes</h3>
-            <ul>
-                {notes.map(note => (
-                    <li key={note.id}>
-                        <strong>{note.title}</strong>: {note.content}
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this note?")) return;
+    try {
+      await apiClient.delete(`/users/me/notes/${id}`);
+      setSuccess("Note deleted ✅");
+      fetchNotes();
+    } catch {
+      setError("Failed to delete note.");
+    }
+  };
+
+  const handleEdit = (note) => {
+    setEditingNote(note);
+    setTitle(note.title);
+    setContent(note.content);
+  };
+
+  const handleUpdateNote = async (e) => {
+    e.preventDefault();
+    try {
+      await apiClient.put(`/users/me/notes/${editingNote.id}`, {
+        title, content
+      });
+      setEditingNote(null);
+      setTitle(""); setContent("");
+      setSuccess("Note updated ✨");
+      fetchNotes();
+    } catch {
+      setError("Failed to edit note.");
+    }
+  };
+
+  // Apply filters
+  const filteredNotes = notes
+    .filter((n) =>
+      n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      n.content.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      switch (sortOrder) {
+        case "newest":
+          return b.id - a.id;
+        case "oldest":
+          return a.id - b.id;
+        case "az":
+          return a.title.localeCompare(b.title);
+        case "za":
+          return b.title.localeCompare(a.title);
+        default:
+          return 0;
+      }
+    });
+
+  return (
+    <div className="container">
+      <h2>My Dashboard</h2>
+
+      {/* Search & Sort controls */}
+      <div className="controls">
+        <input
+          type="text"
+          placeholder="🔍 Search notes..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+          <option value="newest">📅 Newest</option>
+          <option value="oldest">📂 Oldest</option>
+          <option value="az">A → Z</option>
+          <option value="za">Z → A</option>
+        </select>
+      </div>
+
+      {/* Add/Edit Form */}
+      <form className="note-form" onSubmit={editingNote ? handleUpdateNote : handleAddNote}>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Note Title"
+          required
+        />
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Write your thoughts..."
+          rows="3"
+        />
+        <button type="submit">
+          {editingNote ? "✏️ Update Note" : "➕ Add Note"}
+        </button>
+        {editingNote && (
+          <button 
+            type="button" 
+            onClick={() => { setEditingNote(null); setTitle(""); setContent(""); }}
+            style={{ background: "var(--color-danger)", marginTop: "0.5rem" }}
+          >
+            Cancel
+          </button>
+        )}
+      </form>
+
+      {error && <p className="error">{error}</p>}
+      {success && <p className="success">{success}</p>}
+
+      {/* Notes List */}
+      <h3>Your Notes</h3>
+      <div className="notes-grid">
+        {filteredNotes.length === 0 && <p>No matching notes 😶</p>}
+        {filteredNotes.map((note) => (
+          <div key={note.id} className="note-card">
+            <h4>{note.title}</h4>
+            <p>{note.content}</p>
+            <div className="note-actions">
+              <button onClick={() => handleEdit(note)}>✏️ Edit</button>
+              <button onClick={() => handleDelete(note.id)}>🗑️ Delete</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default DashboardPage;
