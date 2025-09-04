@@ -73,18 +73,36 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
 # --------------------------
 # EMAIL SENDING UTILITY
 # --------------------------
-def send_verification_email(to_email: str, token: str):
-    verify_link = f"{os.getenv('FRONTEND_URL')}/verify?token={token}"
-    body = f"Hi,\n\nPlease verify your ForeSky account by clicking this link:\n{verify_link}\n\nThis link is valid for 24 hours."
-    msg = MIMEText(body)
-    msg['Subject'] = 'Verify your ForeSky account'
-    msg['From'] = os.getenv("EMAIL_FROM")
-    msg['To'] = to_email
 
-    with smtplib.SMTP(os.getenv("EMAIL_HOST"), int(os.getenv("EMAIL_PORT"))) as server:
-        server.starttls()
-        server.login(os.getenv("EMAIL_HOST_USER"), os.getenv("EMAIL_HOST_PASSWORD"))
-        server.send_message(msg)
+
+def send_verification_email(to_email: str, token: str):
+    """
+    Sends an email via Gmail SMTP with a verification link.
+    """
+    verify_link = f"{os.getenv('FRONTEND_URL')}/verify?token={token}"
+    body = f"""
+    Hi,
+
+    Please verify your ForeSky account by clicking this link:
+
+    {verify_link}
+
+    This link is valid for 24 hours.
+    """
+
+    msg = MIMEText(body)
+    msg["Subject"] = "Verify your ForeSky account"
+    msg["From"] = os.getenv("EMAIL_FROM")
+    msg["To"] = to_email
+
+    try:
+        with smtplib.SMTP(os.getenv("EMAIL_HOST"), int(os.getenv("EMAIL_PORT"))) as server:
+            server.starttls()  # upgrade to secure connection
+            server.login(os.getenv("EMAIL_HOST_USER"), os.getenv("EMAIL_HOST_PASSWORD"))
+            server.send_message(msg)
+            print(f"✅ Verification email sent to {to_email}")
+    except Exception as e:
+        print(f"❌ Email sending failed: {e}")
 
 
 # --------------------------
