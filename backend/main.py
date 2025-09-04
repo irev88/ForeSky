@@ -1,7 +1,7 @@
 import os
 import smtplib
 from email.mime.text import MIMEText
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -133,6 +133,21 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
     return db_user
 
+@app.post("/auth/resend")
+def resend_verification(
+    email: str = Body(..., embed=True),
+    db: Session = Depends(get_db)
+):
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.is_verified:
+        return {"message": "User is already verified. Please log in."}
+
+    # generate new token and resend
+    token = security.create_email_token(user.email)
+    send_verification_email(user.email, token)
+    return {"message": f"Verification email resent to {email}"}
 
 @app.get("/auth/verify")
 def verify_email(token: str, db: Session = Depends(get_db)):
