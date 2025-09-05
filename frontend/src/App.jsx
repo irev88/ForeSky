@@ -4,13 +4,12 @@ import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import VerifyPage from './pages/VerifyPage';
+import ParticleBackground from './components/ParticleBackground';
 import './App.css';
 
 function App() {
   const token = localStorage.getItem('accessToken');
   const navigate = useNavigate();
-
-  // Theme state
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
 
   useEffect(() => {
@@ -30,16 +29,20 @@ function App() {
 
   return (
     <>
+      <ParticleBackground />
       <nav>
-        <div className="nav-links">
-          <Link to="/">Home</Link>
-          {!token && <Link to="/login"> Login</Link>}
-          {!token && <Link to="/register"> Register</Link>}
-          {token && <button onClick={handleLogout}>Logout</button>}
+        <div className="nav-content">
+          <div className="logo">ForeSky ✨</div>
+          <div className="nav-links">
+            <Link to="/">Home</Link>
+            {!token && <Link to="/login">Login</Link>}
+            {!token && <Link to="/register">Register</Link>}
+            {token && <button onClick={handleLogout}>Logout</button>}
+            <button className="theme-toggle" onClick={toggleTheme}>
+              {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
+            </button>
+          </div>
         </div>
-        <button onClick={toggleTheme}>
-          {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
-        </button>
       </nav>
 
       <Routes>
@@ -53,9 +56,21 @@ function App() {
 }
 
 const HomePage = () => (
-  <div className="container">
-    <h2>Welcome to ForeSky 🌌</h2>
-    <p>Please register or log in to continue.</p>
+  <div className="app-container">
+    <div className="glass-container" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+      <h1 style={{ fontSize: '3.5rem', marginBottom: '1.5rem' }}>Welcome to ForeSky 🌌</h1>
+      <p style={{ fontSize: '1.2rem', color: 'var(--color-text-secondary)', marginBottom: '2rem' }}>
+        Your personal space for thoughts, ideas, and inspiration
+      </p>
+      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+        <Link to="/register" style={{ textDecoration: 'none' }}>
+          <button style={{ padding: '1rem 2.5rem' }}>Get Started</button>
+        </Link>
+        <Link to="/login" style={{ textDecoration: 'none' }}>
+          <button className="secondary" style={{ padding: '1rem 2.5rem' }}>Sign In</button>
+        </Link>
+      </div>
+    </div>
   </div>
 );
 

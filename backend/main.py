@@ -203,6 +203,57 @@ def get_tags(db: Session = Depends(get_db)):
     return db.query(models.Tag).all()
 
 
+@app.put("/tags/{tag_id}", response_model=schemas.Tag)
+def update_tag(
+    tag_id: int = Path(...),
+    tag: schemas.TagBase = Body(...),
+    db: Session = Depends(get_db)
+):
+    """Update a tag's name - this will affect all notes using this tag"""
+    db_tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
+    if not db_tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    
+    # Check if new name already exists
+    existing = db.query(models.Tag).filter(
+        models.Tag.name == tag.name,
+        models.Tag.id != tag_id
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Tag name already exists")
+    
+    db_tag.name = tag.name
+    db.commit()
+    db.refresh(db_tag)
+    return db_tag
+
+
+@app.delete("/tags/{tag_id}")
+def delete_tag(
+    tag_id: int = Path(...),
+    db: Session = Depends(get_db)
+):
+    """Delete a tag only if no notes are using it"""
+    db_tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
+    if not db_tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    
+    # Check if any notes are using this tag
+    notes_count = db.query(models.Note).join(models.Note.tags).filter(
+        models.Tag.id == tag_id
+    ).count()
+    
+    if notes_count > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cannot delete tag: {notes_count} note(s) are using it"
+        )
+    
+    db.delete(db_tag)
+    db.commit()
+    return {"message": "Tag deleted successfully"}
+
+
 # --------------------------
 # USER ENDPOINTS
 # --------------------------
