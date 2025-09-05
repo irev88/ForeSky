@@ -204,11 +204,11 @@ function DashboardPage() {
           
           {note.tags && note.tags.length > 0 && (
             <div className="tag-list">
-              {note.tags.map(t => (
+                {note.tags.map(t => (
                 <span key={t.id} className="tag-pill">#{t.name}</span>
-              ))}
+                ))}
             </div>
-          )}
+        )}
         
           <div className="note-actions">
             <button onClick={() => handleEdit(note)}>✏️ Edit</button>

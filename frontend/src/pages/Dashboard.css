@@ -92,6 +92,9 @@
   }
   .tag-list {
     margin-top: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
   }
   .tag-pill {
     display: inline-block;
@@ -99,10 +102,8 @@
     color: white;
     border-radius: 6px;
     padding: 0.2rem 0.5rem;
-    margin-right: 0.3rem;
     font-size: 0.8rem;
     cursor: pointer;
-    transition: opacity 0.2s;
   }
   .tag-pill:hover {
     opacity: 0.85;
