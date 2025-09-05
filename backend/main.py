@@ -13,6 +13,22 @@ from database import SessionLocal, engine, Base
 # Create DB tables
 Base.metadata.create_all(bind=engine)
 
+# --- Seed common tags on startup ---
+COMMON_TAGS = ["school", "leisure", "sports", "music"]
+
+def seed_common_tags():
+    db = SessionLocal()
+    try:
+        for name in COMMON_TAGS:
+            exists = db.query(models.Tag).filter(models.Tag.name == name).first()
+            if not exists:
+                db.add(models.Tag(name=name))
+        db.commit()
+    finally:
+        db.close()
+
+seed_common_tags()
+
 app = FastAPI(title="ForeSky API", description="FastAPI backend for ForeSky", version="1.0")
 
 # --------------------------
@@ -209,10 +225,11 @@ def update_note(
     if not db_note:
         raise HTTPException(status_code=404, detail="Note not found")
 
+    # update core fields
     db_note.title = note.title
     db_note.content = note.content
 
-    # ✅ fix: sync tags
+    # ✅ NEW: sync tags as well
     if note.tag_ids is not None:
         db_note.tags = db.query(models.Tag).filter(models.Tag.id.in_(note.tag_ids)).all()
 
@@ -253,6 +270,17 @@ def create_tag(tag: schemas.TagBase, db: Session = Depends(get_db)):
 def get_tags(db: Session = Depends(get_db)):
     return db.query(models.Tag).all()
 
+@app.delete("/tags/{tag_id}")
+def delete_tag(tag_id: int, db: Session = Depends(get_db)):
+    tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
+    if not tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    if tag.notes:  # Tag is still used
+        raise HTTPException(status_code=400, detail="Cannot delete tag in use")
+    db.delete(tag)
+    db.commit()
+    return {"message": f"Tag '{tag.name}' deleted"}
+
 @app.post("/users/me/notes/", response_model=schemas.Note)
 def create_note_for_user(
     note: schemas.NoteCreate, 
@@ -276,7 +304,3 @@ def create_note_for_user(
 @app.get("/users/me/", response_model=schemas.User)
 def read_users_me(current_user: schemas.User = Depends(get_current_user)):
     return current_user
-
-@app.get("/users/me/notes/", response_model=List[schemas.Note])
-def read_own_notes(db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)):
-    return current_user.notes
