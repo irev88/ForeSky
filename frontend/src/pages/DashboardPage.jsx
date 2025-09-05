@@ -34,7 +34,11 @@ function DashboardPage() {
     e.preventDefault();
     setError(""); setSuccess("");
     try {
-      await apiClient.post("/users/me/notes/", { title, content });
+        await apiClient.post("/users/me/notes/", { 
+            title, 
+            content,
+            tag_ids: selectedTags 
+          });
       setTitle(""); setContent("");
       setSuccess("Note added ✨");
       fetchNotes();
@@ -63,9 +67,11 @@ function DashboardPage() {
   const handleUpdateNote = async (e) => {
     e.preventDefault();
     try {
-      await apiClient.put(`/users/me/notes/${editingNote.id}`, {
-        title, content
-      });
+        await apiClient.put(`/users/me/notes/${editingNote.id}`, {
+            title,
+            content,
+            tag_ids: selectedTags
+          });
       setEditingNote(null);
       setTitle(""); setContent("");
       setSuccess("Note updated ✨");

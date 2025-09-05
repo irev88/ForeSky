@@ -211,6 +211,11 @@ def update_note(
 
     db_note.title = note.title
     db_note.content = note.content
+
+    # ✅ fix: sync tags
+    if note.tag_ids is not None:
+        db_note.tags = db.query(models.Tag).filter(models.Tag.id.in_(note.tag_ids)).all()
+
     db.commit()
     db.refresh(db_note)
     return db_note
@@ -249,10 +254,17 @@ def get_tags(db: Session = Depends(get_db)):
     return db.query(models.Tag).all()
 
 @app.post("/users/me/notes/", response_model=schemas.Note)
-def create_note(note: schemas.NoteCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+def create_note_for_user(
+    note: schemas.NoteCreate, 
+    db: Session = Depends(get_db), 
+    current_user: schemas.User = Depends(get_current_user)
+):
     db_note = models.Note(title=note.title, content=note.content, owner_id=current_user.id)
+    
+    # Properly attach tags
     if note.tag_ids:
         db_note.tags = db.query(models.Tag).filter(models.Tag.id.in_(note.tag_ids)).all()
+    
     db.add(db_note)
     db.commit()
     db.refresh(db_note)
@@ -264,18 +276,6 @@ def create_note(note: schemas.NoteCreate, db: Session = Depends(get_db), current
 @app.get("/users/me/", response_model=schemas.User)
 def read_users_me(current_user: schemas.User = Depends(get_current_user)):
     return current_user
-
-@app.post("/users/me/notes/", response_model=schemas.Note)
-def create_note_for_user(
-    note: schemas.NoteCreate, 
-    db: Session = Depends(get_db), 
-    current_user: schemas.User = Depends(get_current_user)
-):
-    db_note = models.Note(**note.dict(), owner_id=current_user.id)
-    db.add(db_note)
-    db.commit()
-    db.refresh(db_note)
-    return db_note
 
 @app.get("/users/me/notes/", response_model=List[schemas.Note])
 def read_own_notes(db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)):
