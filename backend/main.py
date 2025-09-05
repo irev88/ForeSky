@@ -233,6 +233,31 @@ def delete_note(
     db.commit()
     return {"message": "Note deleted successfully"}
 
+@app.post("/tags/", response_model=schemas.Tag)
+def create_tag(tag: schemas.TagBase, db: Session = Depends(get_db)):
+    db_tag = db.query(models.Tag).filter(models.Tag.name == tag.name).first()
+    if db_tag:
+        return db_tag
+    new_tag = models.Tag(name=tag.name)
+    db.add(new_tag)
+    db.commit()
+    db.refresh(new_tag)
+    return new_tag
+
+@app.get("/tags/", response_model=List[schemas.Tag])
+def get_tags(db: Session = Depends(get_db)):
+    return db.query(models.Tag).all()
+
+@app.post("/users/me/notes/", response_model=schemas.Note)
+def create_note(note: schemas.NoteCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    db_note = models.Note(title=note.title, content=note.content, owner_id=current_user.id)
+    if note.tag_ids:
+        db_note.tags = db.query(models.Tag).filter(models.Tag.id.in_(note.tag_ids)).all()
+    db.add(db_note)
+    db.commit()
+    db.refresh(db_note)
+    return db_note
+
 # --------------------------
 # USER'S NOTES ENDPOINTS
 # --------------------------

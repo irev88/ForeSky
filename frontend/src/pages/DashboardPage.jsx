@@ -9,6 +9,9 @@ function DashboardPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [editingNote, setEditingNote] = useState(null);
+  const [tags, setTags] = useState([]); // all tags from backend
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [newTag, setNewTag] = useState("");
 
   // Search & sort
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,6 +95,27 @@ function DashboardPage() {
           return 0;
       }
     });
+  const fetchTags = async () => {
+    const res = await apiClient.get("/tags/");
+    setTags(res.data);
+  };
+
+  useEffect(() => {
+    fetchTags();
+  }, []);
+
+  const toggleTag = (tagId) => {
+    setSelectedTags((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+    );
+  };
+
+  const handleAddCustomTag = async () => {
+    if (!newTag) return;
+    const res = await apiClient.post("/tags/", { name: newTag });
+    setTags((prev) => [...prev, res.data]);
+    setNewTag("");
+  };
 
   return (
     <div className="container">
@@ -128,6 +152,24 @@ function DashboardPage() {
           placeholder="Write your thoughts..."
           rows="3"
         />
+        <div className="tag-selector">
+            {tags.map((tag) => (
+                <span
+                key={tag.id}
+                className={`tag-chip ${selectedTags.includes(tag.id) ? "active" : ""}`}
+                onClick={() => toggleTag(tag.id)}
+                >
+                #{tag.name}
+                </span>
+            ))}
+            <input
+                type="text"
+                placeholder="Add custom tag"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddCustomTag()}
+            />
+        </div>
         <button type="submit">
           {editingNote ? "✏️ Update Note" : "➕ Add Note"}
         </button>
