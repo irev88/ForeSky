@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Table
 from sqlalchemy.orm import relationship
-from .database import Base
+from database import Base
 
 # Association table: Many-to-Many relation between Notes and Tags
 note_tags = Table(
