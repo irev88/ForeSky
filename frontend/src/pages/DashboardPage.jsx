@@ -26,24 +26,59 @@ function DashboardPage() {
     }
   };
 
+  const fetchTags = async () => {
+    try {
+      const res = await apiClient.get("/tags/");
+      setTags(res.data);
+    } catch {
+      setError("Could not fetch tags.");
+    }
+  };
+
   useEffect(() => {
     fetchNotes();
+    fetchTags();
   }, []);
 
   const handleAddNote = async (e) => {
     e.preventDefault();
-    setError(""); setSuccess("");
+    setError(""); 
+    setSuccess("");
+    
     try {
-        await apiClient.post("/users/me/notes/", { 
-            title, 
-            content,
-            tag_ids: selectedTags 
-          });
-      setTitle(""); setContent("");
+      await apiClient.post("/users/me/notes/", { 
+        title, 
+        content,
+        tag_ids: selectedTags  // Include selected tags
+      });
+      
+      setTitle(""); 
+      setContent("");
+      setSelectedTags([]); // Reset selected tags
       setSuccess("Note added ✨");
       fetchNotes();
     } catch {
       setError("Could not add note.");
+    }
+  };
+
+  const handleUpdateNote = async (e) => {
+    e.preventDefault();
+    try {
+      await apiClient.put(`/users/me/notes/${editingNote.id}`, {
+        title, 
+        content,
+        tag_ids: selectedTags  // Include selected tags for update
+      });
+      
+      setEditingNote(null);
+      setTitle(""); 
+      setContent("");
+      setSelectedTags([]); // Reset selected tags
+      setSuccess("Note updated ✨");
+      fetchNotes();
+    } catch {
+      setError("Failed to edit note.");
     }
   };
 
@@ -62,22 +97,28 @@ function DashboardPage() {
     setEditingNote(note);
     setTitle(note.title);
     setContent(note.content);
+    // Set selected tags based on the note's existing tags
+    setSelectedTags(note.tags ? note.tags.map(tag => tag.id) : []);
   };
 
-  const handleUpdateNote = async (e) => {
-    e.preventDefault();
+  const toggleTag = (tagId) => {
+    setSelectedTags((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+    );
+  };
+
+  const handleAddCustomTag = async () => {
+    if (!newTag.trim()) return;
+    
     try {
-        await apiClient.put(`/users/me/notes/${editingNote.id}`, {
-            title, 
-            content,
-            tag_ids: selectedTags
-          });
-      setEditingNote(null);
-      setTitle(""); setContent("");
-      setSuccess("Note updated ✨");
-      fetchNotes();
+      const res = await apiClient.post("/tags/", { name: newTag.trim() });
+      if (!tags.find(t => t.id === res.data.id)) {
+        setTags((prev) => [...prev, res.data]);
+      }
+      setNewTag("");
+      setSuccess("Tag created ✅");
     } catch {
-      setError("Failed to edit note.");
+      setError("Could not create tag.");
     }
   };
 
@@ -101,27 +142,6 @@ function DashboardPage() {
           return 0;
       }
     });
-  const fetchTags = async () => {
-    const res = await apiClient.get("/tags/");
-    setTags(res.data);
-  };
-
-  useEffect(() => {
-    fetchTags();
-  }, []);
-
-  const toggleTag = (tagId) => {
-    setSelectedTags((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
-    );
-  };
-
-  const handleAddCustomTag = async () => {
-    if (!newTag) return;
-    const res = await apiClient.post("/tags/", { name: newTag });
-    setTags((prev) => [...prev, res.data]);
-    setNewTag("");
-  };
 
   return (
     <div className="container">
@@ -158,31 +178,67 @@ function DashboardPage() {
           placeholder="Write your thoughts..."
           rows="3"
         />
-        <div className="tag-selector">
+        
+        {/* Tag Selector */}
+        <div className="tag-section">
+          <label>Tags:</label>
+          <div className="tag-selector">
             {tags.map((tag) => (
-                <span
+              <span
                 key={tag.id}
                 className={`tag-chip ${selectedTags.includes(tag.id) ? "active" : ""}`}
                 onClick={() => toggleTag(tag.id)}
-                >
+                style={{
+                  cursor: 'pointer',
+                  padding: '0.3rem 0.6rem',
+                  margin: '0.2rem',
+                  borderRadius: '15px',
+                  background: selectedTags.includes(tag.id) ? 'var(--color-primary)' : 'var(--color-border)',
+                  color: selectedTags.includes(tag.id) ? 'white' : 'var(--color-text)',
+                  display: 'inline-block',
+                  fontSize: '0.85rem'
+                }}
+              >
                 #{tag.name}
-                </span>
+              </span>
             ))}
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
             <input
-                type="text"
-                placeholder="Add custom tag"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAddCustomTag()}
+              type="text"
+              placeholder="Create new tag..."
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddCustomTag();
+                }
+              }}
+              style={{ flex: 1 }}
             />
+            <button 
+              type="button" 
+              onClick={handleAddCustomTag}
+              style={{ width: 'auto', padding: '0.5rem 1rem' }}
+            >
+              Add Tag
+            </button>
+          </div>
         </div>
+
         <button type="submit">
           {editingNote ? "✏️ Update Note" : "➕ Add Note"}
         </button>
         {editingNote && (
           <button 
             type="button" 
-            onClick={() => { setEditingNote(null); setTitle(""); setContent(""); }}
+            onClick={() => { 
+              setEditingNote(null); 
+              setTitle(""); 
+              setContent(""); 
+              setSelectedTags([]);
+            }}
             style={{ background: "var(--color-danger)", marginTop: "0.5rem" }}
           >
             Cancel
@@ -194,27 +250,42 @@ function DashboardPage() {
       {success && <p className="success">{success}</p>}
 
       {/* Notes List */}
-      <h3>Your Notes</h3>
+      <h3>Your Notes ({filteredNotes.length})</h3>
       <div className="notes-grid">
         {filteredNotes.length === 0 && <p>No matching notes 😶</p>}
         {filteredNotes.map((note) => (
           <div key={note.id} className="note-card">
-          <h4>{note.title}</h4>
-          <p>{note.content}</p>
-          
-          {note.tags && note.tags.length > 0 && (
-            <div className="tag-list">
-                {note.tags.map(t => (
-                <span key={t.id} className="tag-pill">#{t.name}</span>
+            <h4>{note.title}</h4>
+            <p>{note.content}</p>
+            
+            {/* Display tags */}
+            {note.tags && note.tags.length > 0 && (
+              <div className="note-tags" style={{ marginTop: '0.5rem' }}>
+                {note.tags.map(tag => (
+                  <span 
+                    key={tag.id} 
+                    className="tag-badge"
+                    style={{
+                      fontSize: '0.75rem',
+                      padding: '0.2rem 0.5rem',
+                      marginRight: '0.3rem',
+                      borderRadius: '10px',
+                      background: 'var(--color-accent)',
+                      color: 'var(--color-text)',
+                      display: 'inline-block'
+                    }}
+                  >
+                    #{tag.name}
+                  </span>
                 ))}
+              </div>
+            )}
+            
+            <div className="note-actions">
+              <button onClick={() => handleEdit(note)}>✏️ Edit</button>
+              <button onClick={() => handleDelete(note.id)}>🗑️ Delete</button>
             </div>
-        )}
-        
-          <div className="note-actions">
-            <button onClick={() => handleEdit(note)}>✏️ Edit</button>
-            <button onClick={() => handleDelete(note.id)}>🗑️ Delete</button>
           </div>
-        </div>
         ))}
       </div>
     </div>

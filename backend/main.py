@@ -13,22 +13,6 @@ from database import SessionLocal, engine, Base
 # Create DB tables
 Base.metadata.create_all(bind=engine)
 
-# --- Seed common tags on startup ---
-COMMON_TAGS = ["school", "leisure", "sports", "music"]
-
-def seed_common_tags():
-    db = SessionLocal()
-    try:
-        for name in COMMON_TAGS:
-            exists = db.query(models.Tag).filter(models.Tag.name == name).first()
-            if not exists:
-                db.add(models.Tag(name=name))
-        db.commit()
-    finally:
-        db.close()
-
-seed_common_tags()
-
 app = FastAPI(title="ForeSky API", description="FastAPI backend for ForeSky", version="1.0")
 
 # --------------------------
@@ -36,7 +20,7 @@ app = FastAPI(title="ForeSky API", description="FastAPI backend for ForeSky", ve
 # --------------------------
 origins = [
     "http://localhost:5173",                 # Local dev
-    "https://metsky.netlify.app" # Prod frontend
+    "https://metsky.netlify.app"            # Prod frontend
 ]
 
 app.add_middleware(
@@ -89,8 +73,6 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
 # --------------------------
 # EMAIL SENDING UTILITY
 # --------------------------
-
-
 def send_verification_email(to_email: str, token: str):
     """
     Sends an email via Gmail SMTP with a verification link.
@@ -149,6 +131,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
     return db_user
 
+
 @app.post("/auth/resend")
 def resend_verification(
     email: str = Body(..., embed=True),
@@ -165,6 +148,7 @@ def resend_verification(
     send_verification_email(user.email, token)
     return {"message": f"Verification email resent to {email}"}
 
+
 @app.get("/auth/verify")
 def verify_email(token: str, db: Session = Depends(get_db)):
     email = security.verify_email_token(token)
@@ -179,18 +163,6 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Email verified successfully. You can now log in."}
 
-@app.post("/auth/resend")
-def resend_verification(email: str, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == email).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if user.is_verified:
-        return {"message": "User already verified"}
-
-    # generate new token and resend email
-    token = security.create_email_token(user.email)
-    send_verification_email(user.email, token)
-    return {"message": "Verification email resent"}
 
 @app.post("/auth/login", response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -210,6 +182,62 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+
+# --------------------------
+# TAGS ENDPOINTS
+# --------------------------
+@app.post("/tags/", response_model=schemas.Tag)
+def create_tag(tag: schemas.TagBase, db: Session = Depends(get_db)):
+    db_tag = db.query(models.Tag).filter(models.Tag.name == tag.name).first()
+    if db_tag:
+        return db_tag
+    new_tag = models.Tag(name=tag.name)
+    db.add(new_tag)
+    db.commit()
+    db.refresh(new_tag)
+    return new_tag
+
+
+@app.get("/tags/", response_model=List[schemas.Tag])
+def get_tags(db: Session = Depends(get_db)):
+    return db.query(models.Tag).all()
+
+
+# --------------------------
+# USER ENDPOINTS
+# --------------------------
+@app.get("/users/me/", response_model=schemas.User)
+def read_users_me(current_user: schemas.User = Depends(get_current_user)):
+    return current_user
+
+
+# --------------------------
+# NOTES ENDPOINTS
+# --------------------------
+@app.post("/users/me/notes/", response_model=schemas.Note)
+def create_note_for_user(
+    note: schemas.NoteCreate, 
+    db: Session = Depends(get_db), 
+    current_user: schemas.User = Depends(get_current_user)
+):
+    db_note = models.Note(title=note.title, content=note.content, owner_id=current_user.id)
+    
+    # Handle tags if provided
+    if note.tag_ids:
+        db_note.tags = db.query(models.Tag).filter(models.Tag.id.in_(note.tag_ids)).all()
+    
+    db.add(db_note)
+    db.commit()
+    db.refresh(db_note)
+    return db_note
+
+
+@app.get("/users/me/notes/", response_model=List[schemas.Note])
+def read_own_notes(db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)):
+    notes = db.query(models.Note).filter(models.Note.owner_id == current_user.id).all()
+    return notes
+
+
 @app.put("/users/me/notes/{note_id}", response_model=schemas.Note)
 def update_note(
     note_id: int = Path(...),
@@ -225,17 +253,18 @@ def update_note(
     if not db_note:
         raise HTTPException(status_code=404, detail="Note not found")
 
-    # update core fields
+    # Update basic fields
     db_note.title = note.title
     db_note.content = note.content
-
-    # ✅ NEW: sync tags as well
+    
+    # Update tags if provided
     if note.tag_ids is not None:
         db_note.tags = db.query(models.Tag).filter(models.Tag.id.in_(note.tag_ids)).all()
-
+    
     db.commit()
     db.refresh(db_note)
     return db_note
+
 
 @app.delete("/users/me/notes/{note_id}")
 def delete_note(
@@ -254,53 +283,3 @@ def delete_note(
     db.delete(db_note)
     db.commit()
     return {"message": "Note deleted successfully"}
-
-@app.post("/tags/", response_model=schemas.Tag)
-def create_tag(tag: schemas.TagBase, db: Session = Depends(get_db)):
-    db_tag = db.query(models.Tag).filter(models.Tag.name == tag.name).first()
-    if db_tag:
-        return db_tag
-    new_tag = models.Tag(name=tag.name)
-    db.add(new_tag)
-    db.commit()
-    db.refresh(new_tag)
-    return new_tag
-
-@app.get("/tags/", response_model=List[schemas.Tag])
-def get_tags(db: Session = Depends(get_db)):
-    return db.query(models.Tag).all()
-
-@app.delete("/tags/{tag_id}")
-def delete_tag(tag_id: int, db: Session = Depends(get_db)):
-    tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
-    if not tag:
-        raise HTTPException(status_code=404, detail="Tag not found")
-    if tag.notes:  # Tag is still used
-        raise HTTPException(status_code=400, detail="Cannot delete tag in use")
-    db.delete(tag)
-    db.commit()
-    return {"message": f"Tag '{tag.name}' deleted"}
-
-@app.post("/users/me/notes/", response_model=schemas.Note)
-def create_note_for_user(
-    note: schemas.NoteCreate, 
-    db: Session = Depends(get_db), 
-    current_user: schemas.User = Depends(get_current_user)
-):
-    db_note = models.Note(title=note.title, content=note.content, owner_id=current_user.id)
-    
-    # Properly attach tags
-    if note.tag_ids:
-        db_note.tags = db.query(models.Tag).filter(models.Tag.id.in_(note.tag_ids)).all()
-    
-    db.add(db_note)
-    db.commit()
-    db.refresh(db_note)
-    return db_note
-
-# --------------------------
-# USER'S NOTES ENDPOINTS
-# --------------------------
-@app.get("/users/me/", response_model=schemas.User)
-def read_users_me(current_user: schemas.User = Depends(get_current_user)):
-    return current_user
