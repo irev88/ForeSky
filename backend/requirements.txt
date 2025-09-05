@@ -1,10 +1,20 @@
+# ---- Core FastAPI ----
 fastapi==0.116.0
 uvicorn[standard]==0.27.1
-SQLAlchemy==2.0.21
-psycopg2-binary==2.9.9
-python-jose==3.3.0
-passlib[bcrypt]==1.7.4
-bcrypt==4.0.1
-python-dotenv==1.0.0
-email-validator==2.0.0
 gunicorn==21.2.0
+
+# ---- Database ----
+SQLAlchemy==2.0.23          # ✅ works with psycopg2 + avoids Python 3.13 Typing bug
+psycopg2-binary==2.9.9
+
+# ---- Auth & Security ----
+python-jose==3.3.0          # JWT support
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1               # ✅ stable for passlib (do not mix with 4.3.0)
+
+# ---- Utils ----
+python-dotenv==1.0.1        # environment variables
+email-validator==2.1.0      # validate emails
+
+# ---- Optional (if you render templates in future) ----
+jinja2==3.1.4
