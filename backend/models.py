@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Boolean
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -9,6 +9,15 @@ note_tags = Table(
     Column("note_id", ForeignKey("notes.id"), primary_key=True),
     Column("tag_id", ForeignKey("tags.id"), primary_key=True),
 )
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)  # NEW FIELD
+    notes = relationship("Note", back_populates="owner")
 
 class Tag(Base):
     __tablename__ = "tags"
