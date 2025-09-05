@@ -18,3 +18,4 @@ email-validator==2.1.0      # validate emails
 
 # ---- Optional (if you render templates in future) ----
 jinja2==3.1.4
+python-multipart
