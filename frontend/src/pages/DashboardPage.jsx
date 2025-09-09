@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import apiClient from "../api";
-import ParticleBackground from "../components/ParticleBackground";
 import "./Dashboard.css";
 
 function DashboardPage() {
@@ -15,19 +14,33 @@ function DashboardPage() {
   const [newTag, setNewTag] = useState("");
   const [editingTag, setEditingTag] = useState(null);
   const [editTagName, setEditTagName] = useState("");
+  const [stats, setStats] = useState({ notes_count: 0, tags_count: 0 });
+  
+  // UI State
+  const [viewMode, setViewMode] = useState("grid");
+  const [showFormSection, setShowFormSection] = useState(false);
+  const [showTagManager, setShowTagManager] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  
+  // Search & sort
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
-  const [loading, setLoading] = useState(false);
+
+  // Keep server awake
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/ping`).catch(() => {});
+    }, 5 * 60 * 1000); // Ping every 5 minutes
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchNotes = async () => {
-    setLoading(true);
     try {
       const response = await apiClient.get("/users/me/notes/");
       setNotes(response.data);
     } catch {
       setError("Could not fetch notes.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -40,9 +53,19 @@ function DashboardPage() {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await apiClient.get("/users/me/stats");
+      setStats(res.data);
+    } catch {
+      console.error("Could not fetch stats");
+    }
+  };
+
   useEffect(() => {
     fetchNotes();
     fetchTags();
+    fetchStats();
   }, []);
 
   const handleAddNote = async (e) => {
@@ -60,8 +83,10 @@ function DashboardPage() {
       setTitle(""); 
       setContent("");
       setSelectedTags([]);
-      setSuccess("Note added successfully! ✨");
+      setSuccess("Note created successfully! ✨");
+      setShowFormSection(false);
       fetchNotes();
+      fetchStats();
     } catch {
       setError("Could not add note.");
     }
@@ -81,6 +106,7 @@ function DashboardPage() {
       setContent("");
       setSelectedTags([]);
       setSuccess("Note updated successfully! ✨");
+      setShowFormSection(false);
       fetchNotes();
     } catch {
       setError("Failed to edit note.");
@@ -91,8 +117,9 @@ function DashboardPage() {
     if (!window.confirm("Are you sure you want to delete this note?")) return;
     try {
       await apiClient.delete(`/users/me/notes/${id}`);
-      setSuccess("Note deleted successfully! ✅");
+      setSuccess("Note deleted successfully! 🗑️");
       fetchNotes();
+      fetchStats();
     } catch {
       setError("Failed to delete note.");
     }
@@ -103,6 +130,8 @@ function DashboardPage() {
     setTitle(note.title);
     setContent(note.content);
     setSelectedTags(note.tags ? note.tags.map(tag => tag.id) : []);
+    setShowFormSection(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const toggleTag = (tagId) => {
@@ -120,9 +149,23 @@ function DashboardPage() {
         setTags((prev) => [...prev, res.data]);
       }
       setNewTag("");
-      setSuccess("Tag created successfully! ✅");
+      setSuccess("Tag created! 🏷️");
+      fetchStats();
     } catch {
       setError("Could not create tag.");
+    }
+  };
+
+  const handleDeleteTag = async (tagId) => {
+    if (!window.confirm("Delete this tag? (Only works if no notes use it)")) return;
+    
+    try {
+      await apiClient.delete(`/tags/${tagId}`);
+      setTags(tags.filter(t => t.id !== tagId));
+      setSuccess("Tag deleted! 🗑️");
+      fetchStats();
+    } catch (err) {
+      setError(err.response?.data?.detail || "Cannot delete tag");
     }
   };
 
@@ -134,22 +177,10 @@ function DashboardPage() {
       setTags(tags.map(t => t.id === tagId ? res.data : t));
       setEditingTag(null);
       setEditTagName("");
-      setSuccess("Tag updated successfully! ✨");
-      fetchNotes(); // Refresh notes to show updated tag names
+      setSuccess("Tag renamed! ✏️");
+      fetchNotes();
     } catch (err) {
-      setError(err.response?.data?.detail || "Could not update tag.");
-    }
-  };
-
-  const handleDeleteTag = async (tagId) => {
-    if (!window.confirm("Are you sure you want to delete this tag?")) return;
-    
-    try {
-      await apiClient.delete(`/tags/${tagId}`);
-      setTags(tags.filter(t => t.id !== tagId));
-      setSuccess("Tag deleted successfully! ✅");
-    } catch (err) {
-      setError(err.response?.data?.detail || "Could not delete tag.");
+      setError(err.response?.data?.detail || "Cannot edit tag");
     }
   };
 
@@ -158,78 +189,156 @@ function DashboardPage() {
     .filter((n) =>
       n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       n.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      n.tags?.some(tag => tag.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      (n.tags && n.tags.some(t => t.name.toLowerCase().includes(searchQuery.toLowerCase())))
     )
     .sort((a, b) => {
       switch (sortOrder) {
-        case "newest":
-          return b.id - a.id;
-        case "oldest":
-          return a.id - b.id;
-        case "az":
-          return a.title.localeCompare(b.title);
-        case "za":
-          return b.title.localeCompare(a.title);
-        default:
-          return 0;
+        case "newest": return b.id - a.id;
+        case "oldest": return a.id - b.id;
+        case "az": return a.title.localeCompare(b.title);
+        case "za": return b.title.localeCompare(a.title);
+        default: return 0;
       }
     });
 
-  // Calculate stats
-  const totalNotes = notes.length;
-  const totalTags = tags.length;
-  const avgTagsPerNote = totalNotes > 0 
-    ? (notes.reduce((sum, note) => sum + (note.tags?.length || 0), 0) / totalNotes).toFixed(1)
-    : 0;
-
   return (
-    <>
-      <ParticleBackground />
-      <div className="app-container">
-        <div className="glass-container">
-          <div className="dashboard-header">
-            <h1 className="dashboard-title">My Dashboard</h1>
-          </div>
+    <div className="dashboard-container">
+      {/* Top Controls */}
+      <div className="top-controls">
+        <div className="search-bar">
+          <input
+            type="text"
+            placeholder="Search notes or tags..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <select 
+          className="sort-select"
+          value={sortOrder} 
+          onChange={(e) => setSortOrder(e.target.value)}
+        >
+          <option value="newest">📅 Newest First</option>
+          <option value="oldest">📂 Oldest First</option>
+          <option value="az">🔤 A → Z</option>
+          <option value="za">🔤 Z → A</option>
+        </select>
+        <div className="view-toggle">
+          <button 
+            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+            onClick={() => setViewMode('grid')}
+          >
+            Grid
+          </button>
+          <button 
+            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+            onClick={() => setViewMode('list')}
+          >
+            List
+          </button>
+        </div>
+      </div>
 
-          {/* Stats Cards */}
-          <div className="stats-cards">
-            <div className="stat-card">
-              <div className="stat-number">{totalNotes}</div>
-              <div className="stat-label">Total Notes</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number">{totalTags}</div>
-              <div className="stat-label">Total Tags</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number">{avgTagsPerNote}</div>
-              <div className="stat-label">Avg Tags/Note</div>
-            </div>
-          </div>
+      {/* Error/Success Messages */}
+      {error && <p className="error">{error}</p>}
+      {success && <p className="success">{success}</p>}
 
-          {/* Search & Sort controls */}
-          <div className="controls">
-            <div className="search-input">
-              <input
-                type="text"
-                placeholder="Search notes or tags..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+      {/* Notes Section (Primary Focus) */}
+      <div className="notes-section">
+        <div className="notes-header">
+          <h2>📝 Your Notes</h2>
+          <span className="notes-count">{filteredNotes.length} notes</span>
+        </div>
+        
+        <div className={viewMode === 'grid' ? 'notes-grid' : 'notes-list'}>
+          {filteredNotes.length === 0 ? (
+            <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
+              <h3>No notes found</h3>
+              <p style={{ marginBottom: '1.5rem' }}>
+                {searchQuery ? "Try different search terms" : "Create your first note below!"}
+              </p>
+              {!searchQuery && (
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => setShowFormSection(true)}
+                  style={{ width: 'auto', padding: '0.8rem 2rem' }}
+                >
+                  Create First Note
+                </button>
+              )}
             </div>
-            <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
-              <option value="newest">📅 Newest First</option>
-              <option value="oldest">📂 Oldest First</option>
-              <option value="az">🔤 A → Z</option>
-              <option value="za">🔤 Z → A</option>
-            </select>
-          </div>
+          ) : (
+            filteredNotes.map((note, index) => (
+              <div key={note.id} className="note-card" style={{ animationDelay: `${Math.min(index * 0.05, 0.3)}s` }}>
+                <h4>{note.title}</h4>
+                <p className="note-content">{note.content}</p>
+                
+                {note.tags && note.tags.length > 0 && (
+                  <div className="note-tags">
+                    {note.tags.map(tag => (
+                      <span key={tag.id} className="note-tag">
+                        #{tag.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
+                <div className="note-actions">
+                  <button className="note-edit-btn" onClick={() => handleEdit(note)}>
+                    ✏️ Edit
+                  </button>
+                  <button className="note-delete-btn" onClick={() => handleDelete(note.id)}>
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
 
-          {/* Tag Manager */}
-          <div className="tag-manager">
-            <div className="tag-manager-header">
-              <h3>Tag Manager</h3>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+      {/* Collapsible Note Form */}
+      <div className={`collapsible-section ${!showFormSection ? 'collapsed' : ''}`}>
+        <div className="collapsible-header" onClick={() => setShowFormSection(!showFormSection)}>
+          <div className="collapsible-title">
+            <span>{editingNote ? '✏️ Edit Note' : '✨ Create New Note'}</span>
+          </div>
+          <span className="collapse-icon">▼</span>
+        </div>
+        
+        <div className="collapsible-content">
+          <form className="form-grid" onSubmit={editingNote ? handleUpdateNote : handleAddNote}>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter note title..."
+              required
+            />
+            
+            <textarea
+              className="note-textarea"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write your thoughts..."
+              required
+            />
+            
+            <div className="tag-selector">
+              <label>Select Tags:</label>
+              <div className="tag-chips">
+                {tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className={`tag-chip ${selectedTags.includes(tag.id) ? "active" : ""}`}
+                    onClick={() => toggleTag(tag.id)}
+                  >
+                    #{tag.name}
+                  </span>
+                ))}
+              </div>
+              
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
                 <input
                   type="text"
                   placeholder="Create new tag..."
@@ -241,111 +350,32 @@ function DashboardPage() {
                       handleAddCustomTag();
                     }
                   }}
-                  style={{ width: '200px', marginBottom: 0 }}
                 />
                 <button 
+                  type="button" 
+                  className="btn btn-secondary"
                   onClick={handleAddCustomTag}
-                  style={{ width: 'auto', padding: '0.75rem 1.5rem' }}
+                  style={{ width: 'auto', padding: '0.8rem 1.5rem' }}
                 >
                   Add Tag
                 </button>
               </div>
             </div>
-            
-            <div className="tags-grid">
-              {tags.map((tag) => (
-                <div key={tag.id} className={`tag-item ${editingTag === tag.id ? 'editing' : ''}`}>
-                  {editingTag === tag.id ? (
-                    <>
-                      <input
-                        type="text"
-                        value={editTagName}
-                        onChange={(e) => setEditTagName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleEditTag(tag.id);
-                          } else if (e.key === 'Escape') {
-                            setEditingTag(null);
-                            setEditTagName("");
-                          }
-                        }}
-                        autoFocus
-                      />
-                      <div className="tag-actions">
-                        <button onClick={() => handleEditTag(tag.id)}>✓</button>
-                        <button onClick={() => { setEditingTag(null); setEditTagName(""); }}>✗</button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <span>#{tag.name}</span>
-                      <div className="tag-actions">
-                        <button onClick={() => { setEditingTag(tag.id); setEditTagName(tag.name); }}>✏️</button>
-                        <button onClick={() => handleDeleteTag(tag.id)}>🗑️</button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Add/Edit Form */}
-          <form className="note-form" onSubmit={editingNote ? handleUpdateNote : handleAddNote}>
-            <div className="form-header">
-              <h3>{editingNote ? "Edit Note" : "Create New Note"}</h3>
-            </div>
-            
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Note Title"
-              required
-            />
-            
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Write your thoughts..."
-              rows="4"
-            />
-            
-            {/* Tag Selector */}
-            <div>
-              <label style={{ marginBottom: '0.5rem', display: 'block', color: 'var(--color-text-secondary)' }}>
-                Select Tags:
-              </label>
-              <div className="tag-selector">
-                {tags.length === 0 ? (
-                  <span style={{ color: 'var(--color-text-secondary)' }}>No tags available. Create one above!</span>
-                ) : (
-                  tags.map((tag) => (
-                    <span
-                      key={tag.id}
-                      className={`tag-chip ${selectedTags.includes(tag.id) ? "active" : ""}`}
-                      onClick={() => toggleTag(tag.id)}
-                    >
-                      #{tag.name}
-                    </span>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button type="submit">
-                {editingNote ? "💾 Update Note" : "➕ Add Note"}
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button type="submit" className="btn btn-primary">
+                {editingNote ? "Update Note" : "Create Note"}
               </button>
               {editingNote && (
                 <button 
                   type="button" 
-                  className="danger"
+                  className="btn btn-danger"
                   onClick={() => { 
                     setEditingNote(null); 
                     setTitle(""); 
                     setContent(""); 
                     setSelectedTags([]);
+                    setShowFormSection(false);
                   }}
                 >
                   Cancel
@@ -353,56 +383,137 @@ function DashboardPage() {
               )}
             </div>
           </form>
+        </div>
+      </div>
 
-          {error && <p className="error">{error}</p>}
-          {success && <p className="success">{success}</p>}
-
-          {/* Notes Section */}
-          <div className="notes-section">
-            <div className="notes-header">
-              <h3>Your Notes</h3>
-              <span className="notes-count">{filteredNotes.length} notes found</span>
-            </div>
-            
-            {loading ? (
-              <div className="loading">
-                <div className="spinner"></div>
-              </div>
-            ) : filteredNotes.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-state-icon">📝</div>
-                <h3>No notes found</h3>
-                <p>{searchQuery ? "Try a different search term" : "Create your first note above!"}</p>
-              </div>
-            ) : (
-              <div className="notes-grid">
-                {filteredNotes.map((note) => (
-                  <div key={note.id} className="note-card">
-                    <h4>{note.title}</h4>
-                    <p>{note.content}</p>
-                    
-                    {note.tags && note.tags.length > 0 && (
-                      <div className="note-tags">
-                        {note.tags.map(tag => (
-                          <span key={tag.id} className="tag-badge">
-                            #{tag.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    
-                    <div className="note-actions">
-                      <button onClick={() => handleEdit(note)}>✏️ Edit</button>
-                      <button onClick={() => handleDelete(note.id)}>🗑️ Delete</button>
+      {/* Collapsible Tag Manager */}
+      <div className={`collapsible-section ${!showTagManager ? 'collapsed' : ''}`}>
+        <div className="collapsible-header" onClick={() => setShowTagManager(!showTagManager)}>
+          <div className="collapsible-title">
+            <span>🏷️ Manage Tags</span>
+            <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
+              ({tags.length} tags)
+            </span>
+          </div>
+          <span className="collapse-icon">▼</span>
+        </div>
+        
+        <div className="collapsible-content">
+          <div className="tag-manager">
+            <div className="tag-list">
+              {tags.map(tag => (
+                <div key={tag.id} className="tag-item">
+                  {editingTag === tag.id ? (
+                    <input
+                      type="text"
+                      value={editTagName}
+                      onChange={(e) => setEditTagName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleEditTag(tag.id);
+                        if (e.key === 'Escape') {
+                          setEditingTag(null);
+                          setEditTagName("");
+                        }
+                      }}
+                      autoFocus
+                      style={{ marginBottom: 0 }}
+                    />
+                  ) : (
+                    <div className="tag-name">
+                      <span className="tag-color"></span>
+                      <span>{tag.name}</span>
                     </div>
+                  )}
+                  <div className="tag-actions">
+                    {editingTag === tag.id ? (
+                      <>
+                        <button 
+                          className="tag-btn tag-edit"
+                          onClick={() => handleEditTag(tag.id)}
+                        >
+                          ✓
+                        </button>
+                        <button 
+                          className="tag-btn tag-delete"
+                          onClick={() => {
+                            setEditingTag(null);
+                            setEditTagName("");
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button 
+                          className="tag-btn tag-edit"
+                          onClick={() => {
+                            setEditingTag(tag.id);
+                            setEditTagName(tag.name);
+                          }}
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          className="tag-btn tag-delete"
+                          onClick={() => handleDeleteTag(tag.id)}
+                        >
+                          🗑️
+                        </button>
+                      </>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </>
+
+      {/* Collapsible Stats */}
+      <div className={`collapsible-section ${!showStats ? 'collapsed' : ''}`}>
+        <div className="collapsible-header" onClick={() => setShowStats(!showStats)}>
+          <div className="collapsible-title">
+            <span>📊 Statistics</span>
+          </div>
+          <span className="collapse-icon">▼</span>
+        </div>
+        
+        <div className="collapsible-content">
+          <div className="stats-mini">
+            <div className="stat-mini">
+              <div className="stat-mini-value">{stats.notes_count}</div>
+              <div className="stat-mini-label">Total Notes</div>
+            </div>
+            <div className="stat-mini">
+              <div className="stat-mini-value">{stats.tags_count}</div>
+              <div className="stat-mini-label">Total Tags</div>
+            </div>
+            <div className="stat-mini">
+              <div className="stat-mini-value">{filteredNotes.length}</div>
+              <div className="stat-mini-label">Filtered</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Floating Action Button */}
+      <div className="fab-container">
+        <button 
+          className="fab"
+          onClick={() => {
+            setShowFormSection(true);
+            setEditingNote(null);
+            setTitle("");
+            setContent("");
+            setSelectedTags([]);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        >
+          ➕
+        </button>
+      </div>
+    </div>
   );
 }
 

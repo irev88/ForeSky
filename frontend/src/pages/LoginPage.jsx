@@ -47,33 +47,41 @@ function LoginPage() {
 
   return (
     <div className="container">
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          required
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
-      {error && <p className="error">{error}</p>}
-      {info && (
-        <div>
-          <p className="success">{info}</p>
-          {info.includes("Resend") && (
-            <button onClick={handleResend}>Resend Email</button>
-          )}
-        </div>
-      )}
+      <div className="auth-container">
+        <h2>Login to ForeSky</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              required
+            />
+          </div>
+          <button type="submit" className="btn btn-primary">Login</button>
+        </form>
+        {error && <p className="error">{error}</p>}
+        {info && (
+          <div>
+            <p className="success">{info}</p>
+            {info.includes("Resend") && (
+              <button onClick={handleResend} className="btn btn-secondary">
+                Resend Email
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

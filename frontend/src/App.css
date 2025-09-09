@@ -1,51 +1,53 @@
 /* ========================
-   MODERN THEME SYSTEM
+   MODERN COSMIC THEME
    ======================== */
    :root {
     --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    
-    /* Light Theme - Modern Glassmorphism */
+    --nav-height: 70px;
+  
+    /* Light Theme - Aurora */
     --color-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --color-surface: rgba(255, 255, 255, 0.95);
     --color-surface-glass: rgba(255, 255, 255, 0.7);
-    --color-text: #1a1a2e;
-    --color-text-secondary: #4a5568;
+    --color-text: #1a202c;
+    --color-text-muted: #4a5568;
     --color-primary: #667eea;
     --color-primary-hover: #5a67d8;
     --color-accent: #f687b3;
     --color-success: #48bb78;
     --color-danger: #f56565;
     --color-warning: #ed8936;
-    --color-border: rgba(160, 174, 192, 0.4);
-    --color-shadow: rgba(0, 0, 0, 0.1);
-    
-    /* Blur Effects */
-    --blur-sm: 8px;
-    --blur-md: 16px;
-    --blur-lg: 24px;
+    --color-border: rgba(203, 213, 224, 0.4);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.15);
+    --shadow-glow: 0 0 40px rgba(102, 126, 234, 0.4);
   }
   
   [data-theme='dark'] {
-    /* Dark Theme - Cyberpunk Inspired */
+    /* Dark Theme - Nebula */
     --color-bg: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
     --color-surface: rgba(30, 30, 45, 0.95);
-    --color-surface-glass: rgba(40, 40, 60, 0.7);
-    --color-text: #e2e8f0;
-    --color-text-secondary: #a0aec0;
+    --color-surface-glass: rgba(30, 30, 45, 0.6);
+    --color-text: #f7fafc;
+    --color-text-muted: #a0aec0;
     --color-primary: #9f7aea;
     --color-primary-hover: #b794f4;
     --color-accent: #fbb6ce;
     --color-success: #68d391;
     --color-danger: #fc8181;
     --color-warning: #f6ad55;
-    --color-border: rgba(74, 85, 104, 0.5);
-    --color-shadow: rgba(0, 0, 0, 0.3);
+    --color-border: rgba(74, 85, 104, 0.3);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 60px rgba(159, 122, 234, 0.5);
   }
   
   /* ========================
-     GLOBAL RESET + BODY
+     GLOBAL STYLES
      ======================== */
   * {
     box-sizing: border-box;
@@ -59,22 +61,22 @@
   }
   
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--color-bg);
     color: var(--color-text);
     line-height: 1.6;
+    transition: all var(--transition);
     position: relative;
-    min-height: 100vh;
+    padding-top: var(--nav-height);
   }
   
   #root {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    min-height: calc(100vh - var(--nav-height));
     position: relative;
+    z-index: 1;
   }
   
-  /* Canvas Background */
+  /* Particle Canvas */
   #particles-canvas {
     position: fixed;
     top: 0;
@@ -82,15 +84,14 @@
     width: 100%;
     height: 100%;
     z-index: 0;
+    opacity: 0.6;
     pointer-events: none;
   }
   
-  /* ========================
-     TYPOGRAPHY
-     ======================== */
+  /* Typography */
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.2;
     margin-bottom: 1rem;
     background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
@@ -99,34 +100,43 @@
     background-clip: text;
   }
   
-  h1 { font-size: 3rem; }
-  h2 { font-size: 2.25rem; }
-  h3 { font-size: 1.875rem; }
-  h4 { font-size: 1.5rem; }
+  /* ========================
+     GLASSMORPHISM CARDS
+     ======================== */
+  .glass-card {
+    background: var(--color-surface-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+    transition: all var(--transition);
+  }
+  
+  .glass-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+  }
   
   /* ========================
-     GLASSMORPHISM NAV
+     NAVIGATION BAR
      ======================== */
   nav {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
+    height: var(--nav-height);
     z-index: 1000;
+    padding: 0 2rem;
     background: var(--color-surface-glass);
-    backdrop-filter: blur(var(--blur-md));
-    -webkit-backdrop-filter: blur(var(--blur-md));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--color-border);
-    padding: 1rem 2rem;
-    box-shadow: 0 4px 30px var(--color-shadow);
-  }
-  
-  nav .nav-content {
-    max-width: 1400px;
-    margin: 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: var(--shadow-md);
   }
   
   nav .logo {
@@ -146,203 +156,221 @@
   }
   
   nav a, nav button {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid var(--color-border);
-    color: var(--color-text);
-    text-decoration: none;
-    font-weight: 500;
-    cursor: pointer;
     padding: 0.6rem 1.2rem;
     border-radius: 12px;
+    font-weight: 500;
     transition: all var(--transition-fast);
-    backdrop-filter: blur(var(--blur-sm));
+    text-decoration: none;
+    color: var(--color-text);
+    background: transparent;
+    border: 2px solid transparent;
+    cursor: pointer;
     position: relative;
     overflow: hidden;
   }
   
+  /* Fixed shimmer animation */
   nav a::before, nav button::before {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: var(--color-primary);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-    z-index: -1;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s;
+    pointer-events: none;
   }
   
   nav a:hover::before, nav button:hover::before {
-    width: 100%;
-    height: 100%;
-    border-radius: 12px;
+    left: 100%;
   }
   
   nav a:hover, nav button:hover {
-    color: white;
+    background: var(--color-surface-glass);
+    border-color: var(--color-primary);
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px var(--color-shadow);
   }
   
-  nav .theme-toggle {
+  .theme-toggle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-    color: white;
-    border: none;
-    font-weight: 600;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    color: white !important;
+    font-size: 1.3rem;
+    box-shadow: var(--shadow-md);
+    border: none !important;
+  }
+  
+  .theme-toggle:hover {
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
   }
   
   /* ========================
      MAIN CONTAINER
      ======================== */
-  .app-container {
-    flex: 1;
-    width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 100px 2rem 2rem;
-    position: relative;
-    z-index: 1;
+  .container {
+    max-width: 100%;
+    margin: 0;
+    padding: 2rem;
+    min-height: calc(100vh - var(--nav-height));
+    animation: fadeIn 0.6s ease;
   }
   
-  .glass-container {
+  .auth-container {
+    max-width: 500px;
+    width: 90%;
+    margin: 2rem auto;
+    padding: 3rem 2.5rem;
     background: var(--color-surface-glass);
-    backdrop-filter: blur(var(--blur-lg));
-    -webkit-backdrop-filter: blur(var(--blur-lg));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-radius: 24px;
+    box-shadow: var(--shadow-lg);
     border: 1px solid var(--color-border);
-    box-shadow: 0 20px 40px var(--color-shadow);
-    padding: 2.5rem;
-    margin-bottom: 2rem;
-    animation: fadeInUp 0.6s ease;
+    animation: slideUp 0.6s ease;
   }
   
   /* ========================
      FORMS & INPUTS
      ======================== */
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
   input, textarea, select {
     width: 100%;
     padding: 1rem 1.25rem;
-    margin-bottom: 1.25rem;
-    border-radius: 16px;
+    border-radius: 12px;
     border: 2px solid var(--color-border);
     font-size: 1rem;
-    font-family: 'Inter', sans-serif;
     background: var(--color-surface-glass);
     color: var(--color-text);
     transition: all var(--transition-fast);
-    backdrop-filter: blur(var(--blur-sm));
+    font-family: 'Inter', sans-serif;
   }
   
   input:focus, textarea:focus, select:focus {
-    border-color: var(--color-primary);
     outline: none;
+    border-color: var(--color-primary);
+    background: var(--color-surface);
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
     transform: translateY(-2px);
   }
   
-  textarea {
-    resize: vertical;
-    min-height: 120px;
+  input::placeholder, textarea::placeholder {
+    color: var(--color-text-muted);
   }
   
   /* ========================
      BUTTONS
      ======================== */
-  button {
-    display: inline-block;
-    padding: 1rem 2rem;
+  .btn {
+    padding: 0.9rem 2rem;
     font-size: 1rem;
     font-weight: 600;
-    border-radius: 16px;
+    border-radius: 12px;
     border: none;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-    color: white;
     cursor: pointer;
     transition: all var(--transition-fast);
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Space Grotesk', sans-serif;
+    width: 100%;
   }
   
-  button::after {
+  /* Fixed button shimmer animation */
+  .btn::before {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s;
+    pointer-events: none;
+    z-index: 1;
   }
   
-  button:hover::after {
-    width: 300px;
-    height: 300px;
+  .btn:hover::before {
+    left: 100%;
   }
   
-  button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 28px rgba(102, 126, 234, 0.5);
+  .btn-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    color: white;
+    box-shadow: var(--shadow-md);
   }
   
-  button:active {
-    transform: translateY(-1px);
+  .btn-primary:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
   }
   
-  button.secondary {
-    background: transparent;
-    color: var(--color-primary);
-    border: 2px solid var(--color-primary);
-    box-shadow: none;
+  .btn-secondary {
+    background: var(--color-surface-glass);
+    color: var(--color-text);
+    border: 2px solid var(--color-border);
   }
   
-  button.secondary:hover {
-    background: var(--color-primary);
+  .btn-secondary:hover {
+    background: var(--color-surface);
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+  }
+  
+  .btn-danger {
+    background: linear-gradient(135deg, var(--color-danger), #e53e3e);
     color: white;
   }
   
-  button.danger {
-    background: linear-gradient(135deg, var(--color-danger), #e53e3e);
+  .btn-danger:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(245, 101, 101, 0.3);
   }
   
-  /* ========================
-     FLOATING LABELS
-     ======================== */
-  .form-group {
-    position: relative;
-    margin-bottom: 1.5rem;
-  }
-  
-  .form-group label {
-    position: absolute;
-    left: 1.25rem;
-    top: 1rem;
-    color: var(--color-text-secondary);
+  button {
+    padding: 0.9rem 2rem;
     font-size: 1rem;
-    pointer-events: none;
+    font-weight: 600;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
     transition: all var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Space Grotesk', sans-serif;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    color: white;
+    box-shadow: var(--shadow-md);
+    width: 100%;
   }
   
-  .form-group input:focus + label,
-  .form-group input:not(:placeholder-shown) + label {
-    top: -0.5rem;
-    left: 1rem;
-    font-size: 0.875rem;
-    background: var(--color-surface);
-    padding: 0 0.5rem;
-    color: var(--color-primary);
+  button:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
   }
   
   /* ========================
      ANIMATIONS
      ======================== */
-  @keyframes fadeInUp {
-    from {
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { 
       opacity: 0;
       transform: translateY(30px);
     }
@@ -352,14 +380,14 @@
     }
   }
   
-  @keyframes slideIn {
+  @keyframes slideInLeft {
     from {
-      transform: translateX(-100%);
       opacity: 0;
+      transform: translateX(-30px);
     }
     to {
-      transform: translateX(0);
       opacity: 1;
+      transform: translateX(0);
     }
   }
   
@@ -369,56 +397,21 @@
   }
   
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
+    0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
-  }
-  
-  @keyframes shimmer {
-    0% { background-position: -1000px 0; }
-    100% { background-position: 1000px 0; }
-  }
-  
-  /* ========================
-     SCROLLBAR
-     ======================== */
-  ::-webkit-scrollbar {
-    width: 12px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    background: var(--color-surface);
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background: linear-gradient(var(--color-primary), var(--color-accent));
-    border-radius: 6px;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-primary-hover);
   }
   
   /* ========================
      UTILITIES
      ======================== */
-  .text-center { text-align: center; }
-  .mt-1 { margin-top: 0.5rem; }
-  .mt-2 { margin-top: 1rem; }
-  .mt-3 { margin-top: 1.5rem; }
-  .mt-4 { margin-top: 2rem; }
-  .mb-1 { margin-bottom: 0.5rem; }
-  .mb-2 { margin-bottom: 1rem; }
-  .mb-3 { margin-bottom: 1.5rem; }
-  .mb-4 { margin-bottom: 2rem; }
-  
   .error {
     color: var(--color-danger);
     background: rgba(245, 101, 101, 0.1);
     padding: 1rem;
     border-radius: 12px;
-    border: 1px solid rgba(245, 101, 101, 0.3);
+    border-left: 4px solid var(--color-danger);
     margin: 1rem 0;
-    animation: slideIn 0.3s ease;
+    animation: slideInLeft 0.4s ease;
   }
   
   .success {
@@ -426,26 +419,43 @@
     background: rgba(72, 187, 120, 0.1);
     padding: 1rem;
     border-radius: 12px;
-    border: 1px solid rgba(72, 187, 120, 0.3);
+    border-left: 4px solid var(--color-success);
     margin: 1rem 0;
-    animation: slideIn 0.3s ease;
+    animation: slideInLeft 0.4s ease;
+  }
+  
+  .loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
   
   /* Responsive */
   @media (max-width: 768px) {
-    h1 { font-size: 2rem; }
-    h2 { font-size: 1.75rem; }
-    h3 { font-size: 1.5rem; }
-    
-    .app-container {
-      padding: 100px 1rem 1rem;
-    }
-    
-    .glass-container {
-      padding: 1.5rem;
+    body {
+      padding-top: 60px;
     }
     
     nav {
+      padding: 0 1rem;
+      height: 60px;
+    }
+    
+    .container {
       padding: 1rem;
+    }
+    
+    .auth-container {
+      width: 95%;
+      margin: 1rem auto;
+      padding: 2rem 1.5rem;
     }
   }

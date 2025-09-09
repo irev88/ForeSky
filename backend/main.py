@@ -1,11 +1,13 @@
 import os
 import smtplib
 from email.mime.text import MIMEText
-from fastapi import Depends, FastAPI, HTTPException, status, Body, Path
+from fastapi import Depends, FastAPI, HTTPException, status, Body, Path, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
+import asyncio
+from datetime import datetime
 
 import models, schemas, security
 from database import SessionLocal, engine, Base
@@ -30,6 +32,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# --------------------------
+# KEEP-ALIVE MECHANISM
+# --------------------------
+async def keep_alive_task():
+    """Background task that keeps the server active"""
+    while True:
+        await asyncio.sleep(840)  # 14 minutes (Render timeout is 15 mins)
+        try:
+            # Ping database to keep connection alive
+            db = SessionLocal()
+            db.execute("SELECT 1")
+            db.close()
+            print(f"Keep-alive ping at {datetime.now()}")
+        except Exception as e:
+            print(f"Keep-alive error: {e}")
+
+@app.on_event("startup")
+async def startup_event():
+    """Start background keep-alive task on server startup"""
+    asyncio.create_task(keep_alive_task())
 
 
 # --------------------------
@@ -104,11 +128,27 @@ def send_verification_email(to_email: str, token: str):
 
 
 # --------------------------
-# ROOT ENDPOINT
+# ROOT & HEALTH ENDPOINTS
 # --------------------------
 @app.get("/")
 def root():
-    return {"message": "ForeSky API is running. See /docs for API usage"}
+    return {"message": "ForeSky API is running. See /docs for API usage", "timestamp": datetime.now()}
+
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint for monitoring and keep-alive"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(),
+        "service": "ForeSky API"
+    }
+
+
+@app.get("/ping")
+def ping():
+    """Simple ping endpoint to prevent server sleep"""
+    return {"pong": True, "time": datetime.now()}
 
 
 # --------------------------
@@ -206,8 +246,9 @@ def get_tags(db: Session = Depends(get_db)):
 @app.put("/tags/{tag_id}", response_model=schemas.Tag)
 def update_tag(
     tag_id: int = Path(...),
-    tag: schemas.TagBase = Body(...),
-    db: Session = Depends(get_db)
+    tag_update: schemas.TagBase = Body(...),
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(get_current_user)
 ):
     """Update a tag's name - this will affect all notes using this tag"""
     db_tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
@@ -216,13 +257,13 @@ def update_tag(
     
     # Check if new name already exists
     existing = db.query(models.Tag).filter(
-        models.Tag.name == tag.name,
+        models.Tag.name == tag_update.name,
         models.Tag.id != tag_id
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="Tag name already exists")
     
-    db_tag.name = tag.name
+    db_tag.name = tag_update.name
     db.commit()
     db.refresh(db_tag)
     return db_tag
@@ -231,7 +272,8 @@ def update_tag(
 @app.delete("/tags/{tag_id}")
 def delete_tag(
     tag_id: int = Path(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(get_current_user)
 ):
     """Delete a tag only if no notes are using it"""
     db_tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
@@ -239,14 +281,14 @@ def delete_tag(
         raise HTTPException(status_code=404, detail="Tag not found")
     
     # Check if any notes are using this tag
-    notes_count = db.query(models.Note).join(models.Note.tags).filter(
-        models.Tag.id == tag_id
+    notes_count = db.query(models.Note).join(models.note_tags).filter(
+        models.note_tags.c.tag_id == tag_id
     ).count()
     
     if notes_count > 0:
         raise HTTPException(
             status_code=400, 
-            detail=f"Cannot delete tag: {notes_count} note(s) are using it"
+            detail=f"Cannot delete tag. {notes_count} note(s) are using this tag."
         )
     
     db.delete(db_tag)
@@ -334,3 +376,22 @@ def delete_note(
     db.delete(db_note)
     db.commit()
     return {"message": "Note deleted successfully"}
+
+
+# --------------------------
+# STATS ENDPOINT
+# --------------------------
+@app.get("/users/me/stats")
+def get_user_stats(
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(get_current_user)
+):
+    """Get user statistics"""
+    notes_count = db.query(models.Note).filter(models.Note.owner_id == current_user.id).count()
+    tags_count = db.query(models.Tag).count()
+    
+    return {
+        "notes_count": notes_count,
+        "tags_count": tags_count,
+        "user_email": current_user.email
+    }
