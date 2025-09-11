@@ -55,7 +55,7 @@
   }
   
   .collapsible-content {
-    padding: 0 1.5rem 1.5rem;
+    padding: 1.3rem 1.5rem 1.5rem;
     transition: all var(--transition);
     max-height: 1000px;
     opacity: 1;
@@ -416,7 +416,7 @@
      TAG MANAGER
      ======================== */
   .tag-manager {
-    padding: 1.5rem;
+    padding: 0.5rem;
   }
   
   .tag-list {
