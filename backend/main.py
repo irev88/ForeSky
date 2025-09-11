@@ -5,6 +5,7 @@ from fastapi import Depends, FastAPI, HTTPException, status, Body, Path, Backgro
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from sqlalchemy import text  # Added this import
 from typing import List
 import asyncio
 from datetime import datetime
@@ -35,7 +36,7 @@ app.add_middleware(
 
 
 # --------------------------
-# KEEP-ALIVE MECHANISM
+# KEEP-ALIVE MECHANISM (FIXED)
 # --------------------------
 async def keep_alive_task():
     """Background task that keeps the server active"""
@@ -44,7 +45,7 @@ async def keep_alive_task():
         try:
             # Ping database to keep connection alive
             db = SessionLocal()
-            db.execute("SELECT 1")
+            db.execute(text("SELECT 1"))  # Fixed: using text()
             db.close()
             print(f"Keep-alive ping at {datetime.now()}")
         except Exception as e:
@@ -76,7 +77,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="Could not validate credentials. Please log in again.",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -85,6 +86,12 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
         if email is None:
             raise credentials_exception
         token_data = schemas.TokenData(email=email)
+    except security.jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired. Please log in again.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     except security.JWTError:
         raise credentials_exception
 
@@ -216,9 +223,20 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     if not user.is_verified:
         raise HTTPException(status_code=403, detail="Email not verified. Please check your inbox.")
 
-    access_token_expires = security.timedelta(minutes=security.ACCESS_TOKEN_EXPIRE_MINUTES)
+    # Increased token expiration time to 7 days
+    access_token_expires = security.timedelta(days=7)
     access_token = security.create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.post("/auth/refresh", response_model=schemas.Token)
+def refresh_token(current_user: schemas.User = Depends(get_current_user)):
+    """Refresh access token"""
+    access_token_expires = security.timedelta(days=7)
+    access_token = security.create_access_token(
+        data={"sub": current_user.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -227,7 +245,11 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 # TAGS ENDPOINTS
 # --------------------------
 @app.post("/tags/", response_model=schemas.Tag)
-def create_tag(tag: schemas.TagBase, db: Session = Depends(get_db)):
+def create_tag(
+    tag: schemas.TagBase, 
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(get_current_user)  # Added auth
+):
     db_tag = db.query(models.Tag).filter(models.Tag.name == tag.name).first()
     if db_tag:
         return db_tag
@@ -311,7 +333,7 @@ def read_users_me(current_user: schemas.User = Depends(get_current_user)):
 def create_note_for_user(
     note: schemas.NoteCreate, 
     db: Session = Depends(get_db), 
-    current_user: schemas.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user)
 ):
     db_note = models.Note(title=note.title, content=note.content, owner_id=current_user.id)
     
@@ -326,7 +348,7 @@ def create_note_for_user(
 
 
 @app.get("/users/me/notes/", response_model=List[schemas.Note])
-def read_own_notes(db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)):
+def read_own_notes(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     notes = db.query(models.Note).filter(models.Note.owner_id == current_user.id).all()
     return notes
 
@@ -336,7 +358,7 @@ def update_note(
     note_id: int = Path(...),
     note: schemas.NoteCreate = Body(...),
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user)
 ):
     db_note = db.query(models.Note).filter(
         models.Note.id == note_id,
@@ -363,7 +385,7 @@ def update_note(
 def delete_note(
     note_id: int = Path(...),
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user)
 ):
     db_note = db.query(models.Note).filter(
         models.Note.id == note_id,
@@ -384,7 +406,7 @@ def delete_note(
 @app.get("/users/me/stats")
 def get_user_stats(
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user)
 ):
     """Get user statistics"""
     notes_count = db.query(models.Note).filter(models.Note.owner_id == current_user.id).count()

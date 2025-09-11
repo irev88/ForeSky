@@ -39,8 +39,16 @@ function DashboardPage() {
     try {
       const response = await apiClient.get("/users/me/notes/");
       setNotes(response.data);
-    } catch {
-      setError("Could not fetch notes.");
+      setError("");
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError("Session expired. Please log in again.");
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else {
+        setError("Could not fetch notes.");
+      }
     }
   };
 
@@ -48,8 +56,8 @@ function DashboardPage() {
     try {
       const res = await apiClient.get("/tags/");
       setTags(res.data);
-    } catch {
-      setError("Could not fetch tags.");
+    } catch (err) {
+      console.error("Could not fetch tags:", err);
     }
   };
 
@@ -57,8 +65,8 @@ function DashboardPage() {
     try {
       const res = await apiClient.get("/users/me/stats");
       setStats(res.data);
-    } catch {
-      console.error("Could not fetch stats");
+    } catch (err) {
+      console.error("Could not fetch stats:", err);
     }
   };
 
@@ -87,8 +95,15 @@ function DashboardPage() {
       setShowFormSection(false);
       fetchNotes();
       fetchStats();
-    } catch {
-      setError("Could not add note.");
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError("Session expired. Please log in again.");
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else {
+        setError("Could not add note. Please try again.");
+      }
     }
   };
 
@@ -108,8 +123,15 @@ function DashboardPage() {
       setSuccess("Note updated successfully! ✨");
       setShowFormSection(false);
       fetchNotes();
-    } catch {
-      setError("Failed to edit note.");
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError("Session expired. Please log in again.");
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else {
+        setError("Failed to edit note.");
+      }
     }
   };
 
@@ -120,8 +142,15 @@ function DashboardPage() {
       setSuccess("Note deleted successfully! 🗑️");
       fetchNotes();
       fetchStats();
-    } catch {
-      setError("Failed to delete note.");
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError("Session expired. Please log in again.");
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else {
+        setError("Failed to delete note.");
+      }
     }
   };
 
@@ -151,8 +180,15 @@ function DashboardPage() {
       setNewTag("");
       setSuccess("Tag created! 🏷️");
       fetchStats();
-    } catch {
-      setError("Could not create tag.");
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError("Session expired. Please log in again.");
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else {
+        setError("Could not create tag.");
+      }
     }
   };
 
