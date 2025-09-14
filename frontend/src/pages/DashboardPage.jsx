@@ -39,16 +39,8 @@ function DashboardPage() {
     try {
       const response = await apiClient.get("/users/me/notes/");
       setNotes(response.data);
-      setError("");
-    } catch (err) {
-      if (err.response?.status === 401) {
-        setError("Session expired. Please log in again.");
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
-      } else {
-        setError("Could not fetch notes.");
-      }
+    } catch {
+      setError("Could not fetch notes.");
     }
   };
 
@@ -56,8 +48,8 @@ function DashboardPage() {
     try {
       const res = await apiClient.get("/tags/");
       setTags(res.data);
-    } catch (err) {
-      console.error("Could not fetch tags:", err);
+    } catch {
+      setError("Could not fetch tags.");
     }
   };
 
@@ -65,8 +57,8 @@ function DashboardPage() {
     try {
       const res = await apiClient.get("/users/me/stats");
       setStats(res.data);
-    } catch (err) {
-      console.error("Could not fetch stats:", err);
+    } catch {
+      console.error("Could not fetch stats");
     }
   };
 
@@ -95,15 +87,8 @@ function DashboardPage() {
       setShowFormSection(false);
       fetchNotes();
       fetchStats();
-    } catch (err) {
-      if (err.response?.status === 401) {
-        setError("Session expired. Please log in again.");
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
-      } else {
-        setError("Could not add note. Please try again.");
-      }
+    } catch {
+      setError("Could not add note.");
     }
   };
 
@@ -123,15 +108,8 @@ function DashboardPage() {
       setSuccess("Note updated successfully! ✨");
       setShowFormSection(false);
       fetchNotes();
-    } catch (err) {
-      if (err.response?.status === 401) {
-        setError("Session expired. Please log in again.");
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
-      } else {
-        setError("Failed to edit note.");
-      }
+    } catch {
+      setError("Failed to edit note.");
     }
   };
 
@@ -142,15 +120,8 @@ function DashboardPage() {
       setSuccess("Note deleted successfully! 🗑️");
       fetchNotes();
       fetchStats();
-    } catch (err) {
-      if (err.response?.status === 401) {
-        setError("Session expired. Please log in again.");
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
-      } else {
-        setError("Failed to delete note.");
-      }
+    } catch {
+      setError("Failed to delete note.");
     }
   };
 
@@ -180,15 +151,8 @@ function DashboardPage() {
       setNewTag("");
       setSuccess("Tag created! 🏷️");
       fetchStats();
-    } catch (err) {
-      if (err.response?.status === 401) {
-        setError("Session expired. Please log in again.");
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
-      } else {
-        setError("Could not create tag.");
-      }
+    } catch {
+      setError("Could not create tag.");
     }
   };
 
@@ -281,13 +245,10 @@ function DashboardPage() {
 
       {/* Notes Section (Primary Focus) */}
       <div className="notes-section">
-      <div className="notes-header">
-        <h2>
-            <span className="emoji-icon">📝</span>
-            <span>Your Notes</span>
-        </h2>
-        <span className="notes-count">{filteredNotes.length} notes</span>
-      </div>
+        <div className="notes-header">
+          <h2>📝 Your Notes</h2>
+          <span className="notes-count">{filteredNotes.length} notes</span>
+        </div>
         
         <div className={viewMode === 'grid' ? 'notes-grid' : 'notes-list'}>
           {filteredNotes.length === 0 ? (
@@ -340,8 +301,7 @@ function DashboardPage() {
       <div className={`collapsible-section ${!showFormSection ? 'collapsed' : ''}`}>
         <div className="collapsible-header" onClick={() => setShowFormSection(!showFormSection)}>
           <div className="collapsible-title">
-            <span className="emoji-icon">{editingNote ? '✏️' : '✨'}</span>
-            <span>{editingNote ? 'Edit Note' : 'Create New Note'}</span>
+            <span>{editingNote ? '✏️ Edit Note' : '✨ Create New Note'}</span>
           </div>
           <span className="collapse-icon">▼</span>
         </div>
@@ -429,13 +389,12 @@ function DashboardPage() {
       {/* Collapsible Tag Manager */}
       <div className={`collapsible-section ${!showTagManager ? 'collapsed' : ''}`}>
         <div className="collapsible-header" onClick={() => setShowTagManager(!showTagManager)}>
-        <div className="collapsible-title">
-            <span className="emoji-icon">🏷️</span>
-            <span>Manage Tags</span>
-            <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginLeft: '0.5rem' }}>
-                ({tags.length} tags)
+          <div className="collapsible-title">
+            <span>🏷️ Manage Tags</span>
+            <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
+              ({tags.length} tags)
             </span>
-        </div>
+          </div>
           <span className="collapse-icon">▼</span>
         </div>
         
@@ -514,10 +473,9 @@ function DashboardPage() {
       {/* Collapsible Stats */}
       <div className={`collapsible-section ${!showStats ? 'collapsed' : ''}`}>
         <div className="collapsible-header" onClick={() => setShowStats(!showStats)}>
-        <div className="collapsible-title">
-            <span className="emoji-icon">📊</span>
-            <span>Statistics</span>
-        </div>
+          <div className="collapsible-title">
+            <span>📊 Statistics</span>
+          </div>
           <span className="collapse-icon">▼</span>
         </div>
         

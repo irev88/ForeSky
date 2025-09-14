@@ -1,81 +1,87 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import apiClient from '../api';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import apiClient from "../api";
 
-function LoginPage({ setIsAuthenticated }) {
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    const loginData = new FormData();
-    loginData.append('username', formData.email);
-    loginData.append('password', formData.password);
-
+    setError("");
+    setInfo("");
     try {
-      const response = await apiClient.post('/auth/login', loginData, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      const formData = new URLSearchParams();
+      formData.append("username", email);
+      formData.append("password", password);
+
+      const response = await apiClient.post("/auth/login", formData, {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
-      localStorage.setItem('accessToken', response.data.access_token);
-      setIsAuthenticated(true);
-      navigate('/dashboard');
+
+      localStorage.setItem("accessToken", response.data.access_token);
+      navigate("/");
+      window.location.reload();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Login failed');
-    } finally {
-      setLoading(false);
+      const detail = err.response?.data?.detail || "Login failed";
+      setError(detail);
+
+      if (detail.includes("not verified")) {
+        setInfo("Didn't get the email? Click Resend below.");
+      }
+    }
+  };
+
+  const handleResend = async () => {
+    try {
+      await apiClient.post("/auth/resend", { email });
+      setInfo("Verification email resent! Check your inbox.");
+      setError("");
+    } catch (err) {
+      setError("Resend failed.");
     }
   };
 
   return (
-    <div className="auth-container glass-card">
-      <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <span className="emoji-icon">🌌</span>
-        <span className="gradient-text">Welcome Back</span>
-      </h2>
-      
-      {error && <div className="error">{error}</div>}
-      
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <input
-            type="email"
-            name="email"
-            placeholder="Email address"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            autoFocus
-          />
-        </div>
-        
-        <div className="form-group">
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? <span className="loading"></span> : 'Sign In'}
-        </button>
-      </form>
-      
-      <p style={{ textAlign: 'center', marginTop: '2rem', color: 'var(--color-text-muted)' }}>
-        Don't have an account? <a href="/register" style={{ color: 'var(--color-primary)' }}>Sign up</a>
-      </p>
+    <div className="container">
+      <div className="auth-container">
+        <h2>Login to ForeSky</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              required
+            />
+          </div>
+          <button type="submit" className="btn btn-primary">Login</button>
+        </form>
+        {error && <p className="error">{error}</p>}
+        {info && (
+          <div>
+            <p className="success">{info}</p>
+            {info.includes("Resend") && (
+              <button onClick={handleResend} className="btn btn-secondary">
+                Resend Email
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
