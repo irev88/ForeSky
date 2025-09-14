@@ -10,7 +10,8 @@ import './App.css';
 function App() {
   const token = localStorage.getItem('accessToken');
   const navigate = useNavigate();
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  // Change default theme to 'dark'
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -32,7 +33,10 @@ function App() {
       <ParticleBackground />
       <nav>
         <div className="nav-content">
-          <Link className="logo" to="/">ForeSky ✨</Link>
+        <Link className="logo" to="/">
+          <span className="gradient-text">ForeSky</span>
+          <span className="emoji-icon">✨</span>
+        </Link>
           <div className="nav-links">
             {!token && <Link to="/login">Login</Link>}
             {!token && <Link to="/register">Register</Link>}
@@ -57,7 +61,10 @@ function App() {
 const HomePage = () => (
   <div className="app-container">
     <div className="glass-container" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-      <h1 style={{ fontSize: '3.5rem', marginBottom: '1.5rem' }}>Welcome to ForeSky 🌌</h1>
+      <h1 style={{ fontSize: '3.5rem', marginBottom: '1.5rem' }}>
+        <span className="gradient-text">Welcome to ForeSky</span>
+        <span className="emoji-icon" style={{ fontSize: '3rem', marginLeft: '1rem' }}>🌌</span>
+      </h1>
       <p style={{ fontSize: '1.2rem', color: 'var(--color-text-secondary)', marginBottom: '2rem' }}>
         Your personal space for thoughts, ideas, and inspiration
       </p>

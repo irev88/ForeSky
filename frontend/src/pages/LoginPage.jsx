@@ -81,6 +81,17 @@ function LoginPage() {
             )}
           </div>
         )}
+        // Add this after the resend email section
+        {!error && (
+        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+            <p style={{ color: 'var(--color-text-muted)' }}>
+            Don't have an account?{' '}
+            <a href="/register" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: '500' }}>
+                Create Account
+            </a>
+            </p>
+        </div>
+        )}
       </div>
     </div>
   );
