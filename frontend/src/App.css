@@ -213,6 +213,14 @@
     box-shadow: var(--shadow-md);
     border: none !important;
   }
+
+  .home {
+    width: 150px
+  }
+
+  .logout {
+    width: 250px
+  }
   
   .theme-toggle:hover {
     transform: rotate(180deg) scale(1.1);
