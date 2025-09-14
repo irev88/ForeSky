@@ -61,7 +61,7 @@ const HomePage = () => (
   <div className="app-container">
     <div className="glass-container" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
       <h1 style={{ fontSize: '3.5rem', marginBottom: '1.5rem' }}>
-        <span className="gradient-text">Welcome to ForeSky</span>
+        <span className="bg-text">Welcome to ForeSky</span>
         <span className="emoji-icon" style={{ fontSize: '3rem', marginLeft: '1rem' }}>🌌</span>
       </h1>
       <p style={{ fontSize: '1.2rem', color: 'var(--color-text-secondary)', marginBottom: '2rem' }}>
