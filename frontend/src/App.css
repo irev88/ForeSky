@@ -215,7 +215,8 @@
   }
 
   .logout {
-    width: 45px
+    width: 150px;
+    height: 45px;
   }
   
   .theme-toggle:hover {
