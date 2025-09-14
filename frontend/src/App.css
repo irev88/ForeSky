@@ -134,6 +134,9 @@
 
   .bg-text {
     background: var(--color-tt);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   
   .emoji-icon {
