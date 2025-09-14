@@ -82,6 +82,8 @@
   .fab {
     width: 60px;
     height: 60px;
+    min-width: 60px;  /* Prevent shrinking */
+    min-height: 60px; /* Prevent shrinking */
     border-radius: 50%;
     background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
     color: white;
@@ -93,10 +95,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    aspect-ratio: 1;  /* Maintain perfect square */
   }
   
   .fab:hover {
-    transform: scale(1.1) rotate(90deg);
+    transform: scale(1.1);  /* Removed rotation to maintain circle */
     box-shadow: var(--shadow-lg), var(--shadow-glow);
   }
   

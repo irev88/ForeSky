@@ -13,9 +13,9 @@
     --color-surface-glass: rgba(255, 255, 255, 0.7);
     --color-text: #1a202c;
     --color-text-muted: #4a5568;
-    --color-primary: #667eea;
-    --color-primary-hover: #5a67d8;
-    --color-accent: #f687b3;
+    --color-primary: #5a4fcf;  /* Darker purple for better contrast */
+    --color-primary-hover: #4a3fb9;
+    --color-accent: #e91e63;
     --color-success: #48bb78;
     --color-danger: #f56565;
     --color-warning: #ed8936;
@@ -94,6 +94,10 @@
     font-weight: 600;
     line-height: 1.2;
     margin-bottom: 1rem;
+    color: var(--color-text);  /* Fallback solid color */
+  }
+
+  .gradient-text {
     background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

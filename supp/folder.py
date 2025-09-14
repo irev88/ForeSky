@@ -357,6 +357,24 @@ class FolderStructureGenerator:
         self.update_tree_display()
         self.status_bar.config(text="File extensions filter updated")
         
+    def is_path_under_collapsed_folder(self, file_path):
+        """Check if a file is under any collapsed (expand=False) folder"""
+        # Get all parent directories of the file
+        current_path = os.path.dirname(file_path)
+        
+        while current_path and current_path != self.base_folder:
+            # Check if this parent folder exists in selected_items and has expand=False
+            if current_path in self.selected_items:
+                if self.selected_items[current_path]['is_folder'] and not self.selected_items[current_path]['expand']:
+                    return True
+            # Move up to parent directory
+            parent = os.path.dirname(current_path)
+            if parent == current_path:  # Reached root
+                break
+            current_path = parent
+            
+        return False
+        
     def generate_output(self):
         if not self.base_folder:
             messagebox.showwarning("No Folder", "Please select a folder first")
@@ -377,22 +395,33 @@ class FolderStructureGenerator:
         
         # Generate file contents
         output.append("\n<SELECTED FILES>")
-        content_files = [path for path, item in self.selected_items.items() 
-                        if not item['is_folder'] and item['include_content']]
         
-        for file_path in content_files:
-            rel_path = os.path.relpath(file_path, os.path.dirname(self.base_folder))
-            output.append(f"\n{rel_path}")
-            output.append("-" * 50)
-            
-            try:
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    content = f.read()
-                    output.append(content)
-            except Exception as e:
-                output.append(f"Error reading file: {str(e)}")
+        # Filter files: only include content if:
+        # 1. File has include_content=True
+        # 2. File is NOT under any collapsed folder
+        content_files = []
+        for path, item in self.selected_items.items():
+            if not item['is_folder'] and item['include_content']:
+                # Check if this file is under any collapsed folder
+                if not self.is_path_under_collapsed_folder(path):
+                    content_files.append(path)
+        
+        if not content_files:
+            output.append("(No file contents to display)")
+        else:
+            for file_path in content_files:
+                rel_path = os.path.relpath(file_path, os.path.dirname(self.base_folder))
+                output.append(f"\n{rel_path}")
+                output.append("-" * 50)
                 
-            output.append("")
+                try:
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read()
+                        output.append(content)
+                except Exception as e:
+                    output.append(f"Error reading file: {str(e)}")
+                    
+                output.append("")
             
         return "\n".join(output)
         

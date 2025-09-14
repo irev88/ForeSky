@@ -282,7 +282,7 @@ function DashboardPage() {
       {/* Notes Section (Primary Focus) */}
       <div className="notes-section">
         <div className="notes-header">
-          <h2>📝 Your Notes</h2>
+          <h2><span>📝</span> Your Notes</h2>
           <span className="notes-count">{filteredNotes.length} notes</span>
         </div>
         
