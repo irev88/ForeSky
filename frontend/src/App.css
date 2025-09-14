@@ -94,13 +94,6 @@
     font-weight: 600;
     line-height: 1.2;
     margin-bottom: 1rem;
-    color: var(--color-text); /* Fallback color */
-  }
-  
-  /* Apply gradient only when explicitly using the class */
-  h1.gradient-text, h2.gradient-text, h3.gradient-text, 
-  h4.gradient-text, h5.gradient-text, h6.gradient-text,
-  .gradient-text {
     background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -175,14 +168,6 @@
     font-family: 'Space Grotesk', sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
-    text-decoration: none;
-    color: var(--color-text);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-  }
-  
-  nav .logo .gradient-text {
     background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
