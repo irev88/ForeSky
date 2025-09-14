@@ -201,8 +201,8 @@
   }
   
   .theme-toggle {
-    width: 250px;
-    height: 50px;
+    width: 150px;
+    height: 45px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -214,12 +214,8 @@
     border: none !important;
   }
 
-  .home {
-    width: 150px
-  }
-
   .logout {
-    width: 250px
+    width: 45px
   }
   
   .theme-toggle:hover {

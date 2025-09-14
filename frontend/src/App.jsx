@@ -32,9 +32,8 @@ function App() {
       <ParticleBackground />
       <nav>
         <div className="nav-content">
-          <div className="logo">ForeSky ✨</div>
+          <Link className="logo" to="/">ForeSky ✨</Link>
           <div className="nav-links">
-            <Link className="home" to="/">Home</Link>
             {!token && <Link to="/login">Login</Link>}
             {!token && <Link to="/register">Register</Link>}
             {token && <button className="logout" onClick={handleLogout}>Logout</button>}
