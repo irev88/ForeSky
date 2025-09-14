@@ -159,6 +159,8 @@
     display: flex;
     gap: 1rem;
     align-items: center;
+    position: absolute;
+    right: 2rem;
   }
   
   nav a, nav button {
@@ -199,7 +201,7 @@
   }
   
   .theme-toggle {
-    width: 50px;
+    width: 250px;
     height: 50px;
     border-radius: 50%;
     display: flex;

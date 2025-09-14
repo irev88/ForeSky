@@ -34,10 +34,10 @@ function App() {
         <div className="nav-content">
           <div className="logo">ForeSky ✨</div>
           <div className="nav-links">
-            <Link to="/">Home</Link>
+            <Link className="home" to="/">Home</Link>
             {!token && <Link to="/login">Login</Link>}
             {!token && <Link to="/register">Register</Link>}
-            {token && <button onClick={handleLogout}>Logout</button>}
+            {token && <button className="logout" onClick={handleLogout}>Logout</button>}
             <button className="theme-toggle" onClick={toggleTheme}>
               {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
             </button>
