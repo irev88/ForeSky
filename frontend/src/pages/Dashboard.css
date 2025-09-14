@@ -69,6 +69,33 @@
     overflow: hidden;
   }
   
+  /* Add at the top of the file */
+.emoji-icon {
+    display: inline-block;
+    margin-right: 8px;
+    font-size: 1.2em;
+    vertical-align: middle;
+  }
+  
+  /* Update the collapsible-title to better align items */
+  .collapsible-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  
+  /* Ensure note card headers don't have gradient issues */
+  .note-card h4 {
+    margin-bottom: 0.75rem;
+    font-size: 1.2rem;
+    color: var(--color-text);
+    background: none;
+    -webkit-text-fill-color: var(--color-text);
+    font-weight: 600;
+  }
+
   /* ========================
      FLOATING ACTION BUTTONS
      ======================== */
@@ -96,10 +123,11 @@
     align-items: center;
     justify-content: center;
     aspect-ratio: 1;  /* Maintain perfect square */
+    flex-shrink: 0;   /* Prevent flexbox from shrinking */
   }
   
   .fab:hover {
-    transform: scale(1.1);  /* Removed rotation to maintain circle */
+    transform: scale(1.1);  /* Only scale, no rotation */
     box-shadow: var(--shadow-lg), var(--shadow-glow);
   }
   

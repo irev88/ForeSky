@@ -8,9 +8,11 @@ import ParticleBackground from './components/ParticleBackground';
 import './App.css';
 
 function App() {
-  // Default to dark theme
+  // Default to dark theme - check localStorage first, fallback to 'dark'
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('theme') || 'dark';
+    const savedTheme = localStorage.getItem('theme');
+    // If no saved theme or saved theme is invalid, default to dark
+    return savedTheme === 'light' ? 'light' : 'dark';
   });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -40,10 +42,10 @@ function App() {
       <ParticleBackground />
       <nav>
         <div className="nav-content">
-          <Link to="/" className="logo">
-            <span style={{ marginRight: '8px', fontSize: '1.2em' }}>📝</span>
-            <span className="gradient-text">ForeSky</span>
-          </Link>
+        <Link to="/" className="logo">
+          <span className="emoji-icon">📝</span>
+          <span className="gradient-text">ForeSky</span>
+        </Link>
           <div className="nav-links">
             {isAuthenticated ? (
               <>

@@ -46,7 +46,7 @@ function RegisterPage() {
   return (
     <div className="auth-container glass-card">
       <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <span style={{ marginRight: '8px', fontSize: '1.2em' }}>🌌</span>
+        <span className="emoji-icon">✨</span>
         <span className="gradient-text">Create Account</span>
       </h2>
       

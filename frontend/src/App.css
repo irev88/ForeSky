@@ -7,18 +7,18 @@
     --transition-slow: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     --nav-height: 70px;
   
-    /* Light Theme - Aurora */
+    /* Light Theme - Aurora (Updated for better contrast) */
     --color-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --color-surface: rgba(255, 255, 255, 0.95);
     --color-surface-glass: rgba(255, 255, 255, 0.7);
     --color-text: #1a202c;
     --color-text-muted: #4a5568;
-    --color-primary: #5a4fcf;  /* Darker purple for better contrast */
-    --color-primary-hover: #4a3fb9;
-    --color-accent: #e91e63;
-    --color-success: #48bb78;
-    --color-danger: #f56565;
-    --color-warning: #ed8936;
+    --color-primary: #4338ca;  /* Much darker purple for better contrast */
+    --color-primary-hover: #3730a3;
+    --color-accent: #dc2626;  /* Darker red for better contrast */
+    --color-success: #16a34a;  /* Darker green */
+    --color-danger: #dc2626;
+    --color-warning: #d97706;
     --color-border: rgba(203, 213, 224, 0.4);
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
     --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
@@ -102,6 +102,15 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    font-weight: 700;  /* Make it bolder for better visibility */
+  }
+  
+  /* Separate emoji styling */
+  .emoji-icon {
+    display: inline-block;
+    margin-right: 8px;
+    font-size: 1.2em;
+    vertical-align: middle;
   }
   
   /* ========================

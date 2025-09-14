@@ -281,10 +281,13 @@ function DashboardPage() {
 
       {/* Notes Section (Primary Focus) */}
       <div className="notes-section">
-        <div className="notes-header">
-          <h2><span>📝</span> Your Notes</h2>
-          <span className="notes-count">{filteredNotes.length} notes</span>
-        </div>
+      <div className="notes-header">
+        <h2>
+            <span className="emoji-icon">📝</span>
+            <span>Your Notes</span>
+        </h2>
+        <span className="notes-count">{filteredNotes.length} notes</span>
+      </div>
         
         <div className={viewMode === 'grid' ? 'notes-grid' : 'notes-list'}>
           {filteredNotes.length === 0 ? (
@@ -337,7 +340,8 @@ function DashboardPage() {
       <div className={`collapsible-section ${!showFormSection ? 'collapsed' : ''}`}>
         <div className="collapsible-header" onClick={() => setShowFormSection(!showFormSection)}>
           <div className="collapsible-title">
-            <span>{editingNote ? '✏️ Edit Note' : '✨ Create New Note'}</span>
+            <span className="emoji-icon">{editingNote ? '✏️' : '✨'}</span>
+            <span>{editingNote ? 'Edit Note' : 'Create New Note'}</span>
           </div>
           <span className="collapse-icon">▼</span>
         </div>
@@ -425,12 +429,13 @@ function DashboardPage() {
       {/* Collapsible Tag Manager */}
       <div className={`collapsible-section ${!showTagManager ? 'collapsed' : ''}`}>
         <div className="collapsible-header" onClick={() => setShowTagManager(!showTagManager)}>
-          <div className="collapsible-title">
-            <span>🏷️ Manage Tags</span>
-            <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
-              ({tags.length} tags)
+        <div className="collapsible-title">
+            <span className="emoji-icon">🏷️</span>
+            <span>Manage Tags</span>
+            <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginLeft: '0.5rem' }}>
+                ({tags.length} tags)
             </span>
-          </div>
+        </div>
           <span className="collapse-icon">▼</span>
         </div>
         
@@ -509,9 +514,10 @@ function DashboardPage() {
       {/* Collapsible Stats */}
       <div className={`collapsible-section ${!showStats ? 'collapsed' : ''}`}>
         <div className="collapsible-header" onClick={() => setShowStats(!showStats)}>
-          <div className="collapsible-title">
-            <span>📊 Statistics</span>
-          </div>
+        <div className="collapsible-title">
+            <span className="emoji-icon">📊</span>
+            <span>Statistics</span>
+        </div>
           <span className="collapse-icon">▼</span>
         </div>
         
