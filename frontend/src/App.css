@@ -9,6 +9,7 @@
   
     /* Light Theme - Aurora */
     --color-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --color-tt: linear-gradient(135deg, #f1abf6 0%, #9ee7f5 100%);
     --color-surface: rgba(255, 255, 255, 0.95);
     --color-surface-glass: rgba(255, 255, 255, 0.7);
     --color-text: #1a202c;
@@ -29,6 +30,7 @@
   [data-theme='dark'] {
     /* Dark Theme - Nebula */
     --color-bg: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    --color-tt: linear-gradient(135deg, #9f7aea 0%, #fbb6ce 100%);
     --color-surface: rgba(30, 30, 45, 0.95);
     --color-surface-glass: rgba(30, 30, 45, 0.6);
     --color-text: #f7fafc;
@@ -128,6 +130,10 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  .bg-text {
+    background: var(--color-bg);
   }
   
   .emoji-icon {

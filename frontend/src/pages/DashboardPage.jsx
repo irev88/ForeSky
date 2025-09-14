@@ -248,7 +248,7 @@ function DashboardPage() {
       <div className="notes-header">
         <h2 className="title-with-emoji">
             <span className="emoji-icon">📝</span>
-            <span className="gradient-text">Your Notes</span>
+            <span className="bg-text">Your Notes</span>
         </h2>
         <span className="notes-count">{filteredNotes.length} notes</span>
       </div>
