@@ -34,8 +34,7 @@ function App() {
       <nav>
         <div className="nav-content">
         <Link className="logo" to="/">
-          <span className="gradient-text">ForeSky</span>
-          <span className="emoji-icon">✨</span>
+          <span className="gradient-text">ForeSky ✨</span>
         </Link>
           <div className="nav-links">
             {!token && <Link to="/login">Login</Link>}
