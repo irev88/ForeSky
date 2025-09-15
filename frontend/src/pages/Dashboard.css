@@ -414,7 +414,7 @@
   .tag-chip.active {
     background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
     color: white;
-    border-color: linear-gradient(135deg,var(--color-primary),var(--color-accent));
+    border-color: var(--color-surface);
     animation: pulse 0.4s ease;
   }
   
