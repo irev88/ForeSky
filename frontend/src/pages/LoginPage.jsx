@@ -23,7 +23,7 @@ function LoginPage() {
       });
 
       localStorage.setItem("accessToken", response.data.access_token);
-      navigate("/");
+      navigate("/home");
       window.location.reload();
     } catch (err) {
       const detail = err.response?.data?.detail || "Login failed";
@@ -81,7 +81,7 @@ function LoginPage() {
             )}
           </div>
         )}
-        
+
         {!error && (
         <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
             <p style={{ color: 'var(--color-text-muted)' }}>
