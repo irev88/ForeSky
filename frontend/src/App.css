@@ -196,7 +196,7 @@
   right: 0;
   height: var(--nav-height);
   z-index: 1001;
-  padding: 0 2rem;
+  padding: 0 .8rem;
   background: linear-gradient(90deg,
     rgba(15, 15, 30, 0.92) 0%,
     rgba(25, 25, 45, 0.92) 100%);
@@ -289,9 +289,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, 
-      rgba(102, 126, 234, 0.2), 
-      rgba(159, 122, 234, 0.2));
+    background: linear-gradient(135deg, #3557f033, #3a00b133);
     backdrop-filter: blur(10px);
     color: var(--color-text) !important;
     font-size: 0.9rem;
@@ -299,7 +297,7 @@
     box-shadow: 
       0 4px 12px rgba(0, 0, 0, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgb(152 152 152 / 19%) !important;
     text-transform: none;
     letter-spacing: 0;
   }
