@@ -289,7 +289,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #2147c4b5, #0d041fbf);
+    background: linear-gradient(135deg, #4a6cdae0, #502f93e8);
     backdrop-filter: blur(10px);
     color: var(--color-text) !important;
     font-size: 0.9rem;
@@ -304,7 +304,7 @@
   
   .theme-toggle:hover {
     transform: scale(1.05);
-    background: linear-gradient(135deg, #2147c4b5, #0d041fbf);
+    background: linear-gradient(135deg, #4a6cdae0, #502f93e8);
     box-shadow: 
       0 6px 20px rgba(102, 126, 234, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
