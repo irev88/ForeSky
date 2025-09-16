@@ -41,9 +41,9 @@
   }
   
   .user-email {
-    color: var(--color-text-muted);
+    color: #c6dbe9;
     font-size: 1.1rem;
-    margin-top: 1.5rem;
+    margin-top: 1.4rem;
     font-weight: 300;
     letter-spacing: 0.5px;
   }
