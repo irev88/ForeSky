@@ -269,3 +269,129 @@
       grid-template-columns: repeat(2, 1fr);
     }
   }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    font-weight: 700;
+    position: relative;
+    cursor: default;
+    transition: all 0.3s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Gradient text effect */
+.section-title span:not(.emoji-icon) {
+    background: linear-gradient(
+        135deg,
+        #ffde00 0%,      /* Gold */
+        #ffccaa 25%,     /* Orange */
+        #ffc4e2 50%,     /* Light Red */
+        #FFD93D 75%,     /* Yellow */
+        #FCE77D 100%     /* Light Yellow */
+    );
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: flameGradient 3s ease infinite;
+    text-shadow: 0 0 30px rgba(255, 165, 0, 0.3);
+    letter-spacing: 0.02em;
+}
+
+/* Hover effects */
+.section-title:hover {
+    transform: translateY(-2px);
+}
+
+.section-title:hover span:not(.emoji-icon) {
+    animation-duration: 1s;
+    text-shadow: 
+        0 0 20px rgba(255, 165, 0, 0.5),
+        0 0 40px rgba(255, 100, 0, 0.3),
+        0 0 60px rgba(255, 50, 0, 0.2);
+}
+
+/* Decorative underline */
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #FFA500,
+        #FFD700,
+        #FFA500,
+        transparent
+    );
+    transition: width 0.5s ease;
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(255, 165, 0, 0.5);
+}
+
+.section-title:hover::after {
+    width: 100%;
+}
+
+/* Animations */
+@keyframes flameGradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes spark {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+    25% {
+        transform: scale(1.2) rotate(-5deg);
+    }
+    50% {
+        transform: scale(1.3) rotate(5deg);
+    }
+    75% {
+        transform: scale(1.2) rotate(-5deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+/* Optional: Add a subtle glow to the entire title */
+.section-title::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+        ellipse at center,
+        rgba(255, 200, 0, 0.1) 0%,
+        transparent 70%
+    );
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.section-title:hover::before {
+    opacity: 1;
+}
