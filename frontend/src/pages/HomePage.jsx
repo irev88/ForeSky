@@ -71,7 +71,7 @@ function HomePage() {
       <div className="quick-actions">
         <h2 className="section-title">
           <span className="emoji-icon">⚡</span>
-          Quick Actions
+          <span>Quick Actions</span>
         </h2>
         <div className="action-grid">
           <a href="/notes" className="action-card glass-card">
@@ -96,7 +96,7 @@ function HomePage() {
       <div className="recent-activity">
         <h2 className="section-title">
           <span className="emoji-icon">🕐</span>
-          Recent Activity
+          <span>Recent Activity</span>
         </h2>
         <div className="activity-list glass-card">
           <p className="placeholder-text">Your recent activities will appear here</p>
