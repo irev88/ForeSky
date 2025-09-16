@@ -50,7 +50,7 @@ function App() {
             {!token && location.pathname !== '/register' && <Link to="/register">Register</Link>}
             {token && <button className="logout" onClick={handleLogout}>Logout</button>}
             <button className="theme-toggle" onClick={toggleTheme}>
-              {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
+              {theme === 'light' ? '🌙' : '☀️'}
             </button>
           </div>
         </div>
