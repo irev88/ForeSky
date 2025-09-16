@@ -9,7 +9,7 @@
   
     /* Light Theme - Aurora */
     --color-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --color-tt: linear-gradient(135deg, #f1abf6 0%, #9ee7f5 100%);
+    --color-tt: linear-gradient(135deg, #fabbff 0%, #b1f2ff 100%);
     --color-surface: rgba(255, 255, 255, 0.95);
     --color-surface-glass: rgba(255, 255, 255, 0.7);
     --color-text: #1a202c;
