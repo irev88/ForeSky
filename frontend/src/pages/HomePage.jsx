@@ -39,7 +39,7 @@ function HomePage() {
       <div className="welcome-section">
         <h1 className="welcome-title">
           <span className="emoji-icon">👋</span>
-          <span className="bg-text">Welcome back!</span>
+          <span className="bg-text"> Welcome back!</span>
         </h1>
         <p className="user-email">{userEmail}</p>
       </div>
